@@ -136,25 +136,25 @@ All platforms require the same base tools, plus platform-specific steps below.
    brew install yt-dlp ffmpeg
    ```
 
-5. **Copy yt-dlp as Tauri sidecar**
+5. **Download the standalone yt-dlp binary as Tauri sidecar**
+
+   > **Important:** Do NOT copy the `yt-dlp` installed by Homebrew/pip — it is a Python zipapp and will fail inside the app bundle if the system Python is < 3.10 (e.g. Xcode ships Python 3.9). Use the self-contained binary from GitHub releases instead.
 
    ```bash
-   # Apple Silicon
-   cp $(which yt-dlp) src-tauri/binaries/yt-dlp-aarch64-apple-darwin
+   mkdir -p src-tauri/binaries
+
+   # Apple Silicon (or universal build)
+   curl -L "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos" \
+     -o src-tauri/binaries/yt-dlp-aarch64-apple-darwin
 
    # Intel
-   cp $(which yt-dlp) src-tauri/binaries/yt-dlp-x86_64-apple-darwin
+   curl -L "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos" \
+     -o src-tauri/binaries/yt-dlp-x86_64-apple-darwin
 
-   # Both (for universal build)
-   cp $(which yt-dlp) src-tauri/binaries/yt-dlp-aarch64-apple-darwin
-   cp $(which yt-dlp) src-tauri/binaries/yt-dlp-x86_64-apple-darwin
-   ```
-
-   Make them executable:
-
-   ```bash
    chmod +x src-tauri/binaries/yt-dlp-*
    ```
+
+   The `yt-dlp_macos` release artifact is a universal Mach-O binary (arm64 + x86_64) with Python 3.12 embedded, so it works on both architectures and requires no system Python.
 
 ---
 
