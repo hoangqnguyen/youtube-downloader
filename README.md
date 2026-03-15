@@ -29,11 +29,14 @@ Built with [Tauri v2](https://tauri.app/) (Rust) + [Svelte 5](https://svelte.dev
 - Playlist URLs are automatically expanded into individual videos
 - Parallel downloads with configurable concurrency (1–5 at a time)
 - Real-time progress per video: speed, ETA, file size
-- Customizable save folder (defaults to system Downloads)
+- Retry all failed downloads with one click
+- Auto-retry with configurable max attempts and delay
 - Audio-only mode: extract MP3 from any video
 - Resolution selector: Best / 1080p / 720p / 480p / 360p
-- Browser cookie passthrough to handle age-gated or members-only content
-- Light/dark theme toggle, small binary (~5 MB), no telemetry, no ads
+- Customizable save folder (defaults to system Downloads)
+- Light/dark theme toggle
+- Auto-downloads yt-dlp, ffmpeg, and ffprobe on first launch — no manual setup needed
+- Small binary (~5 MB), no telemetry, no ads
 
 ---
 
@@ -70,110 +73,18 @@ cd lumi-downloader
 # 2. Install JS dependencies
 npm install
 
-# 3. Download sidecar binaries (see platform sections below)
-#    Place them in src-tauri/binaries/
-
-# 4. Dev mode
+# 3. Dev mode (yt-dlp + ffmpeg are auto-downloaded on first launch)
 npm run tauri -- dev
 
-# 5. Release build
+# 4. Release build
 npm run tauri -- build
 ```
 
-### macOS — sidecar binaries
+> **Note:** You don't need to download yt-dlp, ffmpeg, or ffprobe manually. The app automatically downloads them on first launch.
 
-```bash
-mkdir -p src-tauri/binaries
+### Linux — system dependencies
 
-# yt-dlp universal binary (Apple Silicon + Intel, Python 3.12 embedded)
-curl -L "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos" \
-  -o src-tauri/binaries/yt-dlp-aarch64-apple-darwin
-cp src-tauri/binaries/yt-dlp-aarch64-apple-darwin \
-   src-tauri/binaries/yt-dlp-x86_64-apple-darwin
-
-# ffmpeg + ffprobe — Apple Silicon
-curl -L "https://www.osxexperts.net/ffmpeg80arm.zip" -o /tmp/ffmpeg-arm.zip
-curl -L "https://www.osxexperts.net/ffprobe80arm.zip" -o /tmp/ffprobe-arm.zip
-unzip -o /tmp/ffmpeg-arm.zip -d /tmp/
-unzip -o /tmp/ffprobe-arm.zip -d /tmp/
-cp /tmp/ffmpeg src-tauri/binaries/ffmpeg-aarch64-apple-darwin
-cp /tmp/ffprobe src-tauri/binaries/ffprobe-aarch64-apple-darwin
-
-# ffmpeg + ffprobe — Intel
-curl -L "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip" -o /tmp/ffmpeg-x64.zip
-curl -L "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip" -o /tmp/ffprobe-x64.zip
-unzip -o /tmp/ffmpeg-x64.zip -d /tmp/
-unzip -o /tmp/ffprobe-x64.zip -d /tmp/
-cp /tmp/ffmpeg src-tauri/binaries/ffmpeg-x86_64-apple-darwin
-cp /tmp/ffprobe src-tauri/binaries/ffprobe-x86_64-apple-darwin
-
-chmod +x src-tauri/binaries/yt-dlp-* src-tauri/binaries/ffmpeg-*
-```
-
-**Universal binary** (runs natively on both Apple Silicon and Intel):
-
-```bash
-rustup target add aarch64-apple-darwin x86_64-apple-darwin
-npm run tauri -- build --target universal-apple-darwin
-```
-
-### macOS — notarization (for distributing outside App Store)
-
-To avoid Gatekeeper warnings when distributing the `.dmg`, sign and notarize with your Apple Developer account:
-
-```bash
-# 1. Set environment variables
-export APPLE_ID="you@example.com"
-export APPLE_PASSWORD="xxxx-xxxx-xxxx-xxxx"   # App-specific password
-export APPLE_TEAM_ID="XXXXXXXXXX"
-export APPLE_SIGNING_IDENTITY="Developer ID Application: Your Name (XXXXXXXXXX)"
-
-# 2. Build + notarize in one step (Tauri handles stapling automatically)
-npm run tauri -- build --target universal-apple-darwin
-```
-
-Add the following to `src-tauri/tauri.conf.json` under `bundle.macOS` to enable signing:
-
-```json
-"macOS": {
-  "signingIdentity": "Developer ID Application: Your Name (XXXXXXXXXX)",
-  "minimumSystemVersion": "10.15"
-}
-```
-
-### Windows — sidecar binaries
-
-```powershell
-# yt-dlp
-Invoke-WebRequest "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" `
-  -OutFile "src-tauri\binaries\yt-dlp-x86_64-pc-windows-msvc.exe"
-
-# ffmpeg + ffprobe
-Invoke-WebRequest "https://github.com/BtbN/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip" `
-  -OutFile "$env:TEMP\ffmpeg.zip"
-Expand-Archive "$env:TEMP\ffmpeg.zip" -DestinationPath "$env:TEMP\ffmpeg-extract" -Force
-$ffmpegExe = Get-ChildItem "$env:TEMP\ffmpeg-extract" -Recurse -Filter "ffmpeg.exe" | Select-Object -First 1
-$ffprobeExe = Get-ChildItem "$env:TEMP\ffmpeg-extract" -Recurse -Filter "ffprobe.exe" | Select-Object -First 1
-Copy-Item $ffmpegExe.FullName "src-tauri\binaries\ffmpeg-x86_64-pc-windows-msvc.exe"
-Copy-Item $ffprobeExe.FullName "src-tauri\binaries\ffprobe-x86_64-pc-windows-msvc.exe"
-```
-
-### Linux — sidecar binaries
-
-```bash
-pip install -U yt-dlp
-cp $(which yt-dlp) src-tauri/binaries/yt-dlp-x86_64-unknown-linux-gnu
-chmod +x src-tauri/binaries/yt-dlp-x86_64-unknown-linux-gnu
-
-sudo apt install ffmpeg
-cp $(which ffmpeg) src-tauri/binaries/ffmpeg-x86_64-unknown-linux-gnu
-cp $(which ffprobe) src-tauri/binaries/ffprobe-x86_64-unknown-linux-gnu
-chmod +x src-tauri/binaries/ffmpeg-x86_64-unknown-linux-gnu src-tauri/binaries/ffprobe-x86_64-unknown-linux-gnu
-```
-
-Additional system dependencies (Linux)
-
-Building the Tauri app on Linux requires development libraries for GTK / WebKit and other build tools. On Debian/Ubuntu (and Pop!_OS) install:
+Building the Tauri app on Linux requires development libraries for GTK / WebKit. On Debian/Ubuntu:
 
 ```bash
 sudo apt update
@@ -181,32 +92,34 @@ sudo apt install -y build-essential pkg-config cmake libglib2.0-dev libgdk-pixbu
   libwebkit2gtk-4.1-dev libsoup-3.0-dev libssl-dev squashfs-tools patchelf
 ```
 
-On Fedora/RHEL use the equivalent packages (example):
+On Fedora/RHEL:
 
 ```bash
 sudo dnf install -y @development-tools pkgconfig cmake glib2-devel gdk-pixbuf2-devel \
   webkit2gtk4.1-devel libsoup3-devel openssl-devel squashfs-tools patchelf
 ```
 
-Notes:
-- Ensure `pkg-config` can find `libsoup-3.0.pc` and other .pc files (set `PKG_CONFIG_PATH` if you installed libraries to a custom location).
-- AppImage bundling requires `mksquashfs` (from `squashfs-tools`) and `patchelf`. If AppImage creation fails, check those tools and whether `/tmp` is mounted with `noexec` (this can prevent the linuxdeploy AppImage from running).
+### macOS — universal binary
 
+To build a universal binary (Apple Silicon + Intel):
 
----
+```bash
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+npm run tauri -- build --target universal-apple-darwin
+```
 
-## Sidecar naming reference
+### macOS — notarization
 
-Tauri requires bundled binaries to follow the `{name}-{rust-target-triple}` naming convention.
+To distribute outside the App Store without Gatekeeper warnings:
 
-| Platform | yt-dlp | ffmpeg | ffprobe |
-|----------|--------|--------|---------|
-| macOS Apple Silicon | `yt-dlp-aarch64-apple-darwin` | `ffmpeg-aarch64-apple-darwin` | `ffprobe-aarch64-apple-darwin` |
-| macOS Intel | `yt-dlp-x86_64-apple-darwin` | `ffmpeg-x86_64-apple-darwin` | `ffprobe-x86_64-apple-darwin` |
-| Windows (MSVC) | `yt-dlp-x86_64-pc-windows-msvc.exe` | `ffmpeg-x86_64-pc-windows-msvc.exe` | `ffprobe-x86_64-pc-windows-msvc.exe` |
-| Linux x64 | `yt-dlp-x86_64-unknown-linux-gnu` | `ffmpeg-x86_64-unknown-linux-gnu` | `ffprobe-x86_64-unknown-linux-gnu` |
+```bash
+export APPLE_ID="you@example.com"
+export APPLE_PASSWORD="xxxx-xxxx-xxxx-xxxx"   # App-specific password
+export APPLE_TEAM_ID="XXXXXXXXXX"
+export APPLE_SIGNING_IDENTITY="Developer ID Application: Your Name (XXXXXXXXXX)"
 
-To find your exact triple: `rustc -vV | grep host`
+npm run tauri -- build --target universal-apple-darwin
+```
 
 ---
 
@@ -224,10 +137,11 @@ lumi-downloader/
 │       │   ├── QueuePanel.svelte
 │       │   ├── QueueItem.svelte
 │       │   ├── AdvancedPanel.svelte
-│       │   └── FolderPicker.svelte
+│       │   ├── FolderPicker.svelte
+│       │   └── SetupScreen.svelte
 │       ├── stores/
 │       │   ├── queue.svelte.ts     # Download queue state + scheduler
-│       │   └── settings.svelte.ts  # Persistent settings (folder, quality)
+│       │   └── settings.svelte.ts  # Persistent settings (folder, quality, retry)
 │       ├── tauri.ts                # Typed wrappers for Tauri commands
 │       ├── parseUrls.ts            # URL parsing and playlist detection
 │       └── types.ts
@@ -237,11 +151,12 @@ lumi-downloader/
 │   │   ├── commands/
 │   │   │   ├── download.rs     # start_download, cancel_download
 │   │   │   ├── playlist.rs     # expand_playlist
-│   │   │   └── settings.rs     # pick_folder, open_folder
+│   │   │   ├── settings.rs     # pick_folder, open_folder
+│   │   │   └── setup.rs        # check_binaries, setup_binaries
 │   │   └── ytdlp/
 │   │       ├── runner.rs       # yt-dlp sidecar spawn + stdout streaming
 │   │       └── progress.rs     # Progress line parser
-│   ├── binaries/               # Sidecar binaries (gitignored)
+│   ├── binaries.rs             # Binary downloader (yt-dlp, ffmpeg, ffprobe)
 │   ├── capabilities/default.json
 │   └── tauri.conf.json
 ├── package.json
@@ -252,15 +167,11 @@ lumi-downloader/
 
 ## Troubleshooting
 
-**`error: could not find yt-dlp sidecar`** — Binary missing or misnamed. Check `src-tauri/binaries/` for the exact triple suffix.
-
-**`Permission denied` on sidecar** (macOS/Linux) — Run `chmod +x src-tauri/binaries/yt-dlp-* src-tauri/binaries/ffmpeg-* src-tauri/binaries/ffprobe-*`.
-
-**Downloads fail with ffmpeg error** — Make sure `src-tauri/binaries/ffmpeg-{triple}` exists and is executable.
-
 **`webkit2gtk not found`** (Linux) — Install the system WebKit package for your distro (see Linux setup above).
 
 **Gatekeeper warning on macOS** — Either notarize the build (see above), or right-click → Open on first launch.
+
+**Downloads fail** — The app auto-downloads yt-dlp and ffmpeg on first launch. If that fails (e.g. network issues), restart the app to retry.
 
 ---
 
