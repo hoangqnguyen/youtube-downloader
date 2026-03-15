@@ -33,7 +33,7 @@ Built with [Tauri v2](https://tauri.app/) (Rust) + [Svelte 5](https://svelte.dev
 - Audio-only mode: extract MP3 from any video
 - Resolution selector: Best / 1080p / 720p / 480p / 360p
 - Browser cookie passthrough to handle age-gated or members-only content
-- Dark theme, small binary (~5 MB), no telemetry, no ads
+- Light/dark theme toggle, small binary (~5 MB), no telemetry, no ads
 
 ---
 
@@ -254,7 +254,7 @@ lumi-downloader/
 
 **`error: could not find yt-dlp sidecar`** — Binary missing or misnamed. Check `src-tauri/binaries/` for the exact triple suffix.
 
-**`Permission denied` on sidecar** (macOS/Linux) — Run `chmod +x src-tauri/binaries/yt-dlp-* src-tauri/binaries/ffmpeg-*`.
+**`Permission denied` on sidecar** (macOS/Linux) — Run `chmod +x src-tauri/binaries/yt-dlp-* src-tauri/binaries/ffmpeg-* src-tauri/binaries/ffprobe-*`.
 
 **Downloads fail with ffmpeg error** — Make sure `src-tauri/binaries/ffmpeg-{triple}` exists and is executable.
 
