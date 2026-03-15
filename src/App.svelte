@@ -16,7 +16,7 @@
   <header class="titlebar">
     <div class="logo">
       <img src={logo} alt="Logo" width="24" height="24" />
-      <span class="app-name">YT Downloader</span>
+      <span class="app-name">Lumi Downloader</span>
     </div>
   </header>
 
