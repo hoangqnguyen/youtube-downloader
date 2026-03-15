@@ -55,6 +55,43 @@ jobs:
             libsoup-3.0-dev \
             libjavascriptcoregtk-4.1-dev
 
+      - name: Configure Rust linker (Windows)
+        if: matrix.platform == 'windows-2022'
+        shell: pwsh
+        run: |
+          $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vsWhere -latest -property installationPath
+          $msvcDir = Get-ChildItem "$vsPath\VC\Tools\MSVC" -Directory | Sort-Object Name -Descending | Select-Object -First 1
+          $linkExe = "$($msvcDir.FullName)\bin\Hostx64\x64\link.exe"
+          Write-Host "Found linker: $linkExe"
+
+          # Tell Rust/Cargo where the linker is
+          $cargoDir = "$env:USERPROFILE\.cargo"
+          New-Item -ItemType Directory -Force -Path $cargoDir | Out-Null
+          @"
+          [target.x86_64-pc-windows-msvc]
+          linker = "$($linkExe -replace '\\', '\\')"
+          "@ | Out-File -FilePath "$cargoDir\config.toml" -Encoding utf8
+
+          # Also add MSVC libs and Windows SDK to LIB
+          $msvcLibDir = "$($msvcDir.FullName)\lib\x64"
+          $sdkDir = Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0" -ErrorAction SilentlyContinue
+          $sdkPath = $sdkDir.InstallationFolder
+          $sdkVersion = (Get-ChildItem "$sdkPath\lib" -Directory | Sort-Object Name -Descending | Select-Object -First 1).Name
+          $sdkUmLib = "$sdkPath\lib\$sdkVersion\um\x64"
+          $sdkUcrtLib = "$sdkPath\lib\$sdkVersion\ucrt\x64"
+          $libPaths = "$msvcLibDir;$sdkUmLib;$sdkUcrtLib"
+          Write-Host "LIB paths: $libPaths"
+          echo "LIB=$libPaths" >> $env:GITHUB_ENV
+
+          # Add MSVC and SDK include paths
+          $msvcIncDir = "$($msvcDir.FullName)\include"
+          $sdkUcrtInc = "$sdkPath\include\$sdkVersion\ucrt"
+          $sdkUmInc = "$sdkPath\include\$sdkVersion\um"
+          $sdkSharedInc = "$sdkPath\include\$sdkVersion\shared"
+          $incPaths = "$msvcIncDir;$sdkUcrtInc;$sdkUmInc;$sdkSharedInc"
+          echo "INCLUDE=$incPaths" >> $env:GITHUB_ENV
+
       - name: Install npm dependencies
         run: npm ci
 
