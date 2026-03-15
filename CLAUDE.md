@@ -54,14 +54,35 @@ Pushing a `v*` tag triggers `.github/workflows/release.yml`:
 - Windows: builds via `vcvarsall.bat`, uploads artifacts manually via `gh release upload`
 - Creates a **draft release** on GitHub
 
-### 6. After CI completes
+### 6. Draft release notes
+
+After tagging, immediately draft the GitHub release notes using this format:
+
+```markdown
+## What's new in vX.Y.Z
+
+### Section (e.g. "Bug fixes", "New features", "Improvements")
+- Concise bullet describing the change
+
+### Notes (optional)
+- Any user-facing caveats (e.g. Linux chmod instructions)
+```
+
+Guidelines:
+- Review all commits since the last tag (`git log --oneline vPREV..vNEW`)
+- Group changes by type, not by file
+- Write from the user's perspective — what changed for them, not implementation details
+- Keep it short — one line per change
+- Skip internal-only changes (CI refactors, code cleanup) unless they affect the user
+
+### 7. After CI completes
 
 - Go to GitHub Releases → find the draft
 - Set title: `Lumi Downloader vX.Y.Z`
-- Write concise release notes
+- Paste the drafted release notes
 - Publish
 
-### 7. Rules
+### 8. Rules
 
 - Never amend a published tag — create a new patch version
 - Never push without testing locally if code changes are involved
