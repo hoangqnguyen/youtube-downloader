@@ -212,6 +212,33 @@
       color: var(--text);
     }
 
+    .btn-share {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      color: var(--muted);
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-share:hover {
+      color: var(--text);
+      border-color: var(--border);
+      background: var(--surface);
+    }
+
+    .btn-share.copied {
+      color: var(--accent);
+      border-color: rgba(249, 115, 22, 0.2);
+      background: var(--accent-subtle);
+    }
+
     .hero-note {
       margin-top: 20px;
       font-size: 13px;
@@ -309,7 +336,7 @@
       background: var(--accent-subtle);
       border: 1px solid rgba(249, 115, 22, 0.15);
       border-radius: 10px;
-      font-size: 18px;
+      color: var(--accent);
       margin-bottom: 16px;
     }
 
@@ -380,43 +407,82 @@
     .platform-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 12px;
     }
 
     .plt {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 18px;
+      border-radius: var(--radius);
+      padding: 20px 20px;
       font-size: 13.5px;
       font-weight: 500;
       color: var(--text);
-      transition: all 0.2s;
+      transition: all 0.25s;
+      position: relative;
     }
     .plt:hover {
+      border-color: var(--border-hover);
+      background: var(--surface-2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .plt.recommended {
       border-color: var(--accent);
-      background: var(--accent-subtle);
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.06), rgba(251, 191, 36, 0.03));
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .plt.recommended:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px rgba(249, 115, 22, 0.2), 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .plt-badge {
+      position: absolute;
+      top: -9px;
+      right: 16px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     .plt-icon {
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: var(--surface-2);
-      border-radius: 9px;
-      font-size: 17px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
       flex-shrink: 0;
+    }
+    .plt.recommended .plt-icon {
+      background: var(--accent-subtle);
+      border-color: rgba(249, 115, 22, 0.15);
+    }
+    .plt-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-secondary);
+      color: var(--text-secondary);
+    }
+    .plt.recommended .plt-icon svg {
+      fill: var(--accent);
+      color: var(--accent);
     }
 
     .plt-info { min-width: 0; }
-    .plt-name { font-weight: 600; font-size: 13.5px; }
-    .plt-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .plt-name { font-weight: 650; font-size: 14px; letter-spacing: -0.1px; }
+    .plt-sub { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 400; }
+    .plt-size { font-size: 11px; color: var(--muted); margin-top: 2px; opacity: 0.7; }
 
     /* ─── DONATE ─── */
     .donate-box {
@@ -529,7 +595,7 @@
       .btn-donate { width: 100%; }
       .footer-wrap { flex-direction: column; gap: 12px; padding: 20px; }
       .hero-actions { flex-direction: column; }
-      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+      .btn-primary, .btn-secondary, .btn-share { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -545,9 +611,9 @@
     <ul class="nav-links">
       <li><a href="#features">Features</a></li>
       <li><a href="#download">Download</a></li>
-      <li><a href="https://github.com/hoangqnguyen/youtube-downloader" target="_blank">GitHub</a></li>
+      <li><a href="https://github.com/hoangqnguyen/lumi-downloader" target="_blank">GitHub<span id="star-badge" style="display:none;margin-left:6px;background:var(--accent-subtle);border:1px solid rgba(249,115,22,0.15);color:var(--accent);padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;">&#9733; </span></a></li>
     </ul>
-    <a href="https://hoangapps.gumroad.com/l/lumi-downloader" target="_blank" class="btn-nav">Download</a>
+    <a id="nav-download" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest" class="btn-nav">Download</a>
   </div>
 </nav>
 
@@ -557,8 +623,9 @@
   <h1>Download any video.<br><span class="gradient">Free, fast, private.</span></h1>
   <p class="hero-desc">Paste a link, get your file. Videos, audio, whole playlists — straight to your machine.</p>
   <div class="hero-actions">
-    <a href="https://hoangapps.gumroad.com/l/lumi-downloader" target="_blank" class="btn-primary">Download for Mac</a>
+    <a id="hero-download" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest" class="btn-primary">Download for Mac</a>
     <a href="#download" class="btn-secondary">All platforms</a>
+    <button id="share-btn" class="btn-share" onclick="shareLumi()">Share &#8599;</button>
   </div>
   <p class="hero-note">macOS, Windows &amp; Linux &middot; No account required</p>
 </div>
@@ -578,22 +645,22 @@
   <p class="section-sub">No fluff. Just the stuff that matters.</p>
   <div class="features">
     <div class="feat">
-      <div class="feat-icon">&#9889;</div>
+      <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
       <h3>Instant downloads</h3>
       <p>No countdowns, no rate limits. Lumi pulls at your full connection speed the moment you hit paste.</p>
     </div>
     <div class="feat">
-      <div class="feat-icon">&#127925;</div>
+      <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
       <h3>Audio extraction</h3>
       <p>Strip the video, keep the sound. Clean MP3 or FLAC with metadata and album art intact.</p>
     </div>
     <div class="feat">
-      <div class="feat-icon">&#128203;</div>
+      <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
       <h3>Batch playlists</h3>
       <p>Paste a playlist link, walk away. Lumi queues every track and downloads them all.</p>
     </div>
     <div class="feat">
-      <div class="feat-icon">&#128274;</div>
+      <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
       <h3>Fully offline</h3>
       <p>No account, no cloud, no tracking. Files go straight to your folder and stay there.</p>
     </div>
@@ -624,6 +691,39 @@
   </div>
 </div>
 
+<!-- ─── DOWNLOAD ─── -->
+<div class="section" id="download">
+  <div class="section-label">Download</div>
+  <h2 class="section-heading">Get Lumi</h2>
+  <p class="section-sub">Pick the build for your platform.</p>
+  <div class="platform-grid" id="platform-grid">
+    <a class="plt" id="dl-mac-arm" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest">
+      <div class="plt-icon"><svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
+      <div class="plt-info"><div class="plt-name">macOS (Apple Silicon)</div><div class="plt-sub">.dmg &middot; M1 / M2 / M3 / M4</div></div>
+    </a>
+    <a class="plt" id="dl-mac-intel" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest">
+      <div class="plt-icon"><svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
+      <div class="plt-info"><div class="plt-name">macOS (Intel)</div><div class="plt-sub">.dmg &middot; x86_64</div></div>
+    </a>
+    <a class="plt" id="dl-windows" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest">
+      <div class="plt-icon"><svg viewBox="0 0 24 24"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg></div>
+      <div class="plt-info"><div class="plt-name">Windows</div><div class="plt-sub">.exe installer &middot; x64</div></div>
+    </a>
+    <a class="plt" id="dl-linux-appimage" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest">
+      <div class="plt-icon"><svg viewBox="0 0 32 32"><path d="M30.34,24.73a.77.77,0,0,1-.19-.79A2.75,2.75,0,0,0,27,20.38a16,16,0,0,0-3.48-8.62c-1.12-1.61-1.8-2.63-1.53-3.44A6.55,6.55,0,0,0,21,2.53,6,6,0,0,0,16,0a6,6,0,0,0-5,2.53,6.55,6.55,0,0,0-.94,5.79c.27.81-.4,1.83-1.53,3.44A16,16,0,0,0,5,20.38a2.75,2.75,0,0,0-3.19,3.56.77.77,0,0,1-.19.79l-.35.35a2.75,2.75,0,0,0-.76,2.45,2.79,2.79,0,0,0,1.57,2l4.63,2.1a4.79,4.79,0,0,0,2,.43A5,5,0,0,0,9.66,32a4.82,4.82,0,0,0,1.71-.72A14.11,14.11,0,0,0,16,32a14.06,14.06,0,0,0,4.63-.72,4.82,4.82,0,0,0,1.71.72,5,5,0,0,0,.94.09,4.79,4.79,0,0,0,2-.43l4.63-2.1a2.82,2.82,0,0,0,1.58-2,2.78,2.78,0,0,0-.77-2.45ZM12.61,3.7A4.06,4.06,0,0,1,16,2a4,4,0,0,1,3.39,1.7,4.53,4.53,0,0,1,.66,4,3.4,3.4,0,0,0-.15.92,1.23,1.23,0,0,0-.19-.31A5.32,5.32,0,0,0,16,7a5.35,5.35,0,0,0-3.71,1.29,1.23,1.23,0,0,0-.19.31A3.4,3.4,0,0,0,12,7.68,4.56,4.56,0,0,1,12.61,3.7ZM17,9.11,16,9.8l-1-.68A5.24,5.24,0,0,1,17,9.11ZM9.27,30a2.73,2.73,0,0,1-1.69-.19L3,27.74a.77.77,0,0,1-.22-1.25l.35-.35a2.77,2.77,0,0,0,.67-2.83.75.75,0,0,1,.18-.79.78.78,0,0,1,.54-.23.81.81,0,0,1,.25,0,2.78,2.78,0,0,0,1.28.1h.06l.31-.07.07,0a2.63,2.63,0,0,0,1.11-.66l.35-.35a.77.77,0,0,1,.69-.21.78.78,0,0,1,.56.44l2.1,4.62a2.84,2.84,0,0,1,.2,1.7A2.77,2.77,0,0,1,9.27,30Zm3.62-.38a4.81,4.81,0,0,0,.52-1.4,4.69,4.69,0,0,0-.34-2.91L11,20.71a2.74,2.74,0,0,0-3.84-1.27,15.07,15.07,0,0,1,3-6.53,9.8,9.8,0,0,0,1.9-3.65.92.92,0,0,0,.39.57l3,2A1,1,0,0,0,16,12a1,1,0,0,0,.56-.17l3-2a.94.94,0,0,0,.38-.57,9.8,9.8,0,0,0,1.9,3.65,15.07,15.07,0,0,1,3,6.53,2.76,2.76,0,0,0-1.81-.31,2.81,2.81,0,0,0-2,1.58l-2.1,4.63a4.74,4.74,0,0,0,.18,4.31,14,14,0,0,1-6.22,0Zm16.16-1.91-4.63,2.1a2.72,2.72,0,0,1-1.69.19,2.77,2.77,0,0,1-2.18-2.17,2.84,2.84,0,0,1,.2-1.7l2.1-4.62a.78.78,0,0,1,.56-.44h.15a.79.79,0,0,1,.54.22l.35.35a2.69,2.69,0,0,0,1.11.66l.07,0,.31.07h0a2.58,2.58,0,0,0,1.29-.09.78.78,0,0,1,1,1,2.75,2.75,0,0,0,.66,2.83l.35.35a.75.75,0,0,1,.22.68A.78.78,0,0,1,29.05,27.74Z"/></svg></div>
+      <div class="plt-info"><div class="plt-name">Linux</div><div class="plt-sub">.AppImage &middot; amd64</div></div>
+    </a>
+    <a class="plt" id="dl-linux-deb" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest">
+      <div class="plt-icon"><svg viewBox="0 0 32 32"><path d="M30.34,24.73a.77.77,0,0,1-.19-.79A2.75,2.75,0,0,0,27,20.38a16,16,0,0,0-3.48-8.62c-1.12-1.61-1.8-2.63-1.53-3.44A6.55,6.55,0,0,0,21,2.53,6,6,0,0,0,16,0a6,6,0,0,0-5,2.53,6.55,6.55,0,0,0-.94,5.79c.27.81-.4,1.83-1.53,3.44A16,16,0,0,0,5,20.38a2.75,2.75,0,0,0-3.19,3.56.77.77,0,0,1-.19.79l-.35.35a2.75,2.75,0,0,0-.76,2.45,2.79,2.79,0,0,0,1.57,2l4.63,2.1a4.79,4.79,0,0,0,2,.43A5,5,0,0,0,9.66,32a4.82,4.82,0,0,0,1.71-.72A14.11,14.11,0,0,0,16,32a14.06,14.06,0,0,0,4.63-.72,4.82,4.82,0,0,0,1.71.72,5,5,0,0,0,.94.09,4.79,4.79,0,0,0,2-.43l4.63-2.1a2.82,2.82,0,0,0,1.58-2,2.78,2.78,0,0,0-.77-2.45ZM12.61,3.7A4.06,4.06,0,0,1,16,2a4,4,0,0,1,3.39,1.7,4.53,4.53,0,0,1,.66,4,3.4,3.4,0,0,0-.15.92,1.23,1.23,0,0,0-.19-.31A5.32,5.32,0,0,0,16,7a5.35,5.35,0,0,0-3.71,1.29,1.23,1.23,0,0,0-.19.31A3.4,3.4,0,0,0,12,7.68,4.56,4.56,0,0,1,12.61,3.7ZM17,9.11,16,9.8l-1-.68A5.24,5.24,0,0,1,17,9.11ZM9.27,30a2.73,2.73,0,0,1-1.69-.19L3,27.74a.77.77,0,0,1-.22-1.25l.35-.35a2.77,2.77,0,0,0,.67-2.83.75.75,0,0,1,.18-.79.78.78,0,0,1,.54-.23.81.81,0,0,1,.25,0,2.78,2.78,0,0,0,1.28.1h.06l.31-.07.07,0a2.63,2.63,0,0,0,1.11-.66l.35-.35a.77.77,0,0,1,.69-.21.78.78,0,0,1,.56.44l2.1,4.62a2.84,2.84,0,0,1,.2,1.7A2.77,2.77,0,0,1,9.27,30Zm3.62-.38a4.81,4.81,0,0,0,.52-1.4,4.69,4.69,0,0,0-.34-2.91L11,20.71a2.74,2.74,0,0,0-3.84-1.27,15.07,15.07,0,0,1,3-6.53,9.8,9.8,0,0,0,1.9-3.65.92.92,0,0,0,.39.57l3,2A1,1,0,0,0,16,12a1,1,0,0,0,.56-.17l3-2a.94.94,0,0,0,.38-.57,9.8,9.8,0,0,0,1.9,3.65,15.07,15.07,0,0,1,3,6.53,2.76,2.76,0,0,0-1.81-.31,2.81,2.81,0,0,0-2,1.58l-2.1,4.63a4.74,4.74,0,0,0,.18,4.31,14,14,0,0,1-6.22,0Zm16.16-1.91-4.63,2.1a2.72,2.72,0,0,1-1.69.19,2.77,2.77,0,0,1-2.18-2.17,2.84,2.84,0,0,1,.2-1.7l2.1-4.62a.78.78,0,0,1,.56-.44h.15a.79.79,0,0,1,.54.22l.35.35a2.69,2.69,0,0,0,1.11.66l.07,0,.31.07h0a2.58,2.58,0,0,0,1.29-.09.78.78,0,0,1,1,1,2.75,2.75,0,0,0,.66,2.83l.35.35a.75.75,0,0,1,.22.68A.78.78,0,0,1,29.05,27.74Z"/></svg></div>
+      <div class="plt-info"><div class="plt-name">Linux (Debian / Ubuntu)</div><div class="plt-sub">.deb &middot; amd64</div></div>
+    </a>
+    <a class="plt" id="dl-linux-rpm" href="https://github.com/hoangqnguyen/lumi-downloader/releases/latest">
+      <div class="plt-icon"><svg viewBox="0 0 32 32"><path d="M30.34,24.73a.77.77,0,0,1-.19-.79A2.75,2.75,0,0,0,27,20.38a16,16,0,0,0-3.48-8.62c-1.12-1.61-1.8-2.63-1.53-3.44A6.55,6.55,0,0,0,21,2.53,6,6,0,0,0,16,0a6,6,0,0,0-5,2.53,6.55,6.55,0,0,0-.94,5.79c.27.81-.4,1.83-1.53,3.44A16,16,0,0,0,5,20.38a2.75,2.75,0,0,0-3.19,3.56.77.77,0,0,1-.19.79l-.35.35a2.75,2.75,0,0,0-.76,2.45,2.79,2.79,0,0,0,1.57,2l4.63,2.1a4.79,4.79,0,0,0,2,.43A5,5,0,0,0,9.66,32a4.82,4.82,0,0,0,1.71-.72A14.11,14.11,0,0,0,16,32a14.06,14.06,0,0,0,4.63-.72,4.82,4.82,0,0,0,1.71.72,5,5,0,0,0,.94.09,4.79,4.79,0,0,0,2-.43l4.63-2.1a2.82,2.82,0,0,0,1.58-2,2.78,2.78,0,0,0-.77-2.45ZM12.61,3.7A4.06,4.06,0,0,1,16,2a4,4,0,0,1,3.39,1.7,4.53,4.53,0,0,1,.66,4,3.4,3.4,0,0,0-.15.92,1.23,1.23,0,0,0-.19-.31A5.32,5.32,0,0,0,16,7a5.35,5.35,0,0,0-3.71,1.29,1.23,1.23,0,0,0-.19.31A3.4,3.4,0,0,0,12,7.68,4.56,4.56,0,0,1,12.61,3.7ZM17,9.11,16,9.8l-1-.68A5.24,5.24,0,0,1,17,9.11ZM9.27,30a2.73,2.73,0,0,1-1.69-.19L3,27.74a.77.77,0,0,1-.22-1.25l.35-.35a2.77,2.77,0,0,0,.67-2.83.75.75,0,0,1,.18-.79.78.78,0,0,1,.54-.23.81.81,0,0,1,.25,0,2.78,2.78,0,0,0,1.28.1h.06l.31-.07.07,0a2.63,2.63,0,0,0,1.11-.66l.35-.35a.77.77,0,0,1,.69-.21.78.78,0,0,1,.56.44l2.1,4.62a2.84,2.84,0,0,1,.2,1.7A2.77,2.77,0,0,1,9.27,30Zm3.62-.38a4.81,4.81,0,0,0,.52-1.4,4.69,4.69,0,0,0-.34-2.91L11,20.71a2.74,2.74,0,0,0-3.84-1.27,15.07,15.07,0,0,1,3-6.53,9.8,9.8,0,0,0,1.9-3.65.92.92,0,0,0,.39.57l3,2A1,1,0,0,0,16,12a1,1,0,0,0,.56-.17l3-2a.94.94,0,0,0,.38-.57,9.8,9.8,0,0,0,1.9,3.65,15.07,15.07,0,0,1,3,6.53,2.76,2.76,0,0,0-1.81-.31,2.81,2.81,0,0,0-2,1.58l-2.1,4.63a4.74,4.74,0,0,0,.18,4.31,14,14,0,0,1-6.22,0Zm16.16-1.91-4.63,2.1a2.72,2.72,0,0,1-1.69.19,2.77,2.77,0,0,1-2.18-2.17,2.84,2.84,0,0,1,.2-1.7l2.1-4.62a.78.78,0,0,1,.56-.44h.15a.79.79,0,0,1,.54.22l.35.35a2.69,2.69,0,0,0,1.11.66l.07,0,.31.07h0a2.58,2.58,0,0,0,1.29-.09.78.78,0,0,1,1,1,2.75,2.75,0,0,0,.66,2.83l.35.35a.75.75,0,0,1,.22.68A.78.78,0,0,1,29.05,27.74Z"/></svg></div>
+      <div class="plt-info"><div class="plt-name">Linux (Fedora / RHEL)</div><div class="plt-sub">.rpm &middot; x86_64</div></div>
+    </a>
+  </div>
+</div>
+
 <!-- ─── DONATE ─── -->
 <div class="section">
   <div class="donate-box">
@@ -633,7 +733,7 @@
     </div>
     <div class="donate-actions">
       <a href="https://buymeacoffee.com/johnnyng" target="_blank" class="btn-donate solid">Buy me a coffee</a>
-      <a href="https://github.com/hoangqnguyen/youtube-downloader" target="_blank" class="btn-donate outline">Star on GitHub</a>
+      <a href="https://github.com/hoangqnguyen/lumi-downloader" target="_blank" class="btn-donate outline">Star on GitHub</a>
     </div>
   </div>
 </div>
@@ -643,11 +743,115 @@
   <div class="footer-left">&copy; 2026 Lumi &middot; MIT License</div>
   <div class="footer-right">
     <a href="#">Changelog</a>
-    <a href="https://github.com/hoangqnguyen/youtube-downloader">GitHub</a>
+    <a href="https://github.com/hoangqnguyen/lumi-downloader">GitHub</a>
     <a href="#">Privacy</a>
     <a href="#">Contact</a>
   </div>
 </div>
 
+<script>
+(function () {
+  var REPO = 'hoangqnguyen/lumi-downloader';
+  var FALLBACK = 'https://github.com/' + REPO + '/releases/latest';
+
+  // Asset matchers: id -> substring to match in asset name
+  var ASSETS = {
+    'dl-mac-arm':        '_aarch64.dmg',
+    'dl-mac-intel':      '_x64.dmg',
+    'dl-windows':        '_x64-setup.exe',
+    'dl-linux-appimage': '_amd64.AppImage',
+    'dl-linux-deb':      '_amd64.deb',
+    'dl-linux-rpm':      '.x86_64.rpm',
+  };
+
+  // Detect OS for hero button
+  var ua = navigator.userAgent;
+  var os = /Mac/.test(ua) ? 'mac' : /Win/.test(ua) ? 'windows' : /Linux/.test(ua) ? 'linux' : 'mac';
+
+  var heroBtn = document.getElementById('hero-download');
+  var navBtn = document.getElementById('nav-download');
+  var labels = { mac: 'Download for Mac', windows: 'Download for Windows', linux: 'Download for Linux' };
+  var heroAsset = { mac: '_aarch64.dmg', windows: '_x64-setup.exe', linux: '_amd64.AppImage' };
+
+  if (heroBtn) heroBtn.textContent = labels[os] || labels.mac;
+
+  // Highlight recommended platform
+  var recMap = { mac: 'dl-mac-arm', windows: 'dl-windows', linux: 'dl-linux-appimage' };
+  var recId = recMap[os];
+  if (recId) {
+    var recEl = document.getElementById(recId);
+    if (recEl) {
+      recEl.classList.add('recommended');
+      var badge = document.createElement('div');
+      badge.className = 'plt-badge';
+      badge.textContent = 'Recommended';
+      recEl.appendChild(badge);
+    }
+  }
+
+  // Fetch latest release and update all links
+  fetch('https://api.github.com/repos/' + REPO + '/releases/latest')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data.assets) return;
+
+      var assetMap = {};
+      data.assets.forEach(function (a) { assetMap[a.name] = a.browser_download_url; });
+
+      function findUrl(substring) {
+        for (var name in assetMap) {
+          if (name.indexOf(substring) !== -1) return assetMap[name];
+        }
+        return FALLBACK;
+      }
+
+      // Update platform grid links
+      for (var id in ASSETS) {
+        var el = document.getElementById(id);
+        if (el) el.href = findUrl(ASSETS[id]);
+      }
+
+      // Update hero + nav buttons
+      var heroUrl = findUrl(heroAsset[os] || heroAsset.mac);
+      if (heroBtn) heroBtn.href = heroUrl;
+      if (navBtn) navBtn.href = heroUrl;
+    })
+    .catch(function () { /* keep fallback links */ });
+
+  // Fetch star count
+  fetch('https://api.github.com/repos/' + REPO)
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.stargazers_count > 10) {
+        var badge = document.getElementById('star-badge');
+        if (badge) {
+          badge.textContent = '\u2605 ' + data.stargazers_count;
+          badge.style.display = 'inline';
+        }
+      }
+    })
+    .catch(function () {});
+})();
+
+function shareLumi() {
+  var url = 'https://github.com/hoangqnguyen/lumi-downloader';
+  var title = 'Lumi — Free YouTube downloader';
+  var text = 'Check out Lumi — a free, open-source YouTube downloader for Mac, Windows & Linux.';
+
+  if (navigator.share) {
+    navigator.share({ title: title, text: text, url: url }).catch(function () {});
+  } else {
+    navigator.clipboard.writeText(url).then(function () {
+      var btn = document.getElementById('share-btn');
+      btn.classList.add('copied');
+      btn.innerHTML = 'Copied! &#10003;';
+      setTimeout(function () {
+        btn.classList.remove('copied');
+        btn.innerHTML = 'Share &#8599;';
+      }, 2000);
+    });
+  }
+}
+</script>
 </body>
 </html>
