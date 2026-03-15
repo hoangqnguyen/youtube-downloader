@@ -2,7 +2,7 @@
 
 ## Project
 
-Lumi Downloader is a Tauri v2 desktop app (Rust + TypeScript/Vite) that downloads YouTube videos and audio. It bundles yt-dlp, ffmpeg, and ffprobe as sidecar binaries.
+Lumi Downloader is a Tauri v2 desktop app (Rust + TypeScript/Vite) that downloads YouTube videos and audio. It auto-downloads yt-dlp, ffmpeg, and ffprobe on first launch.
 
 - **Repo**: https://github.com/hoangqnguyen/lumi-downloader
 - **Landing page**: `docs/index.html` (static, hosted via GitHub Pages)
@@ -77,10 +77,11 @@ Guidelines:
 
 ### 7. After CI completes
 
-- Go to GitHub Releases → find the draft
-- Set title: `Lumi Downloader vX.Y.Z`
-- Paste the drafted release notes
-- Publish
+After tagging and pushing, automatically:
+1. Wait for CI builds to finish — check with `gh run list --repo hoangqnguyen/lumi-downloader --limit 1`
+2. Update the draft release notes with `gh release edit`
+3. Once all builds succeed, publish the release: `gh release edit vX.Y.Z --draft=false --latest`
+4. Delete any stale draft releases from prior versions if they exist
 
 ### 8. Rules
 
@@ -93,7 +94,7 @@ Guidelines:
 
 - `src-tauri/src/ytdlp/runner.rs` — yt-dlp command runner, handles ffmpeg discovery
 - `src-tauri/src/commands/` — Tauri IPC commands
-- External binaries live in `src-tauri/binaries/` (gitignored, downloaded in CI)
+- External binaries are auto-downloaded on first launch (managed by `src-tauri/src/binaries.rs`)
 - ffmpeg resolution order: bundled sidecar dir → PATH → well-known locations (`/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`)
 
 ## GitHub Secrets (for CI)
