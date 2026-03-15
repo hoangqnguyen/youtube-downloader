@@ -130,31 +130,37 @@ All platforms require the same base tools, plus platform-specific steps below.
    # or: https://nodejs.org/
    ```
 
-4. **Install yt-dlp and ffmpeg**
+4. **Download sidecar binaries (yt-dlp + ffmpeg)**
 
-   ```bash
-   brew install yt-dlp ffmpeg
-   ```
-
-5. **Download the standalone yt-dlp binary as Tauri sidecar**
+   Both binaries are bundled inside the app — no system installation of yt-dlp or ffmpeg is required.
 
    > **Important:** Do NOT copy the `yt-dlp` installed by Homebrew/pip — it is a Python zipapp and will fail inside the app bundle if the system Python is < 3.10 (e.g. Xcode ships Python 3.9). Use the self-contained binary from GitHub releases instead.
 
    ```bash
    mkdir -p src-tauri/binaries
 
-   # Apple Silicon (or universal build)
+   # yt-dlp — Apple Silicon
    curl -L "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos" \
      -o src-tauri/binaries/yt-dlp-aarch64-apple-darwin
 
-   # Intel
+   # yt-dlp — Intel
    curl -L "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos" \
      -o src-tauri/binaries/yt-dlp-x86_64-apple-darwin
 
-   chmod +x src-tauri/binaries/yt-dlp-*
+   # ffmpeg — Apple Silicon (native arm64 static build)
+   curl -L "https://www.osxexperts.net/ffmpeg80arm.zip" -o /tmp/ffmpeg-arm.zip
+   unzip -o /tmp/ffmpeg-arm.zip -d /tmp/
+   cp /tmp/ffmpeg src-tauri/binaries/ffmpeg-aarch64-apple-darwin
+
+   # ffmpeg — Intel (x86_64 static build)
+   curl -L "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip" -o /tmp/ffmpeg-x64.zip
+   unzip -o /tmp/ffmpeg-x64.zip -d /tmp/
+   cp /tmp/ffmpeg src-tauri/binaries/ffmpeg-x86_64-apple-darwin
+
+   chmod +x src-tauri/binaries/yt-dlp-* src-tauri/binaries/ffmpeg-*
    ```
 
-   The `yt-dlp_macos` release artifact is a universal Mach-O binary (arm64 + x86_64) with Python 3.12 embedded, so it works on both architectures and requires no system Python.
+   The `yt-dlp_macos` release artifact is a universal Mach-O binary (arm64 + x86_64) with Python 3.12 embedded, so it works on both architectures and requires no system Python. The ffmpeg binary is statically linked (no Homebrew dependencies) and bundled inside the `.app`.
 
 ---
 
@@ -276,14 +282,14 @@ npm run tauri -- build --target universal-apple-darwin
 
 ## Sidecar binary naming reference
 
-Tauri requires the bundled binary to be named `yt-dlp-{target-triple}`. The triple must match the output of `rustc -vV | grep host`.
+Tauri requires bundled binaries to be named `{name}-{target-triple}`. The triple must match the output of `rustc -vV | grep host`.
 
-| Platform | Triple |
-|----------|--------|
-| Windows (MSVC) | `yt-dlp-x86_64-pc-windows-msvc.exe` |
-| macOS Apple Silicon | `yt-dlp-aarch64-apple-darwin` |
-| macOS Intel | `yt-dlp-x86_64-apple-darwin` |
-| Linux x64 | `yt-dlp-x86_64-unknown-linux-gnu` |
+| Platform | yt-dlp | ffmpeg |
+|----------|--------|--------|
+| Windows (MSVC) | `yt-dlp-x86_64-pc-windows-msvc.exe` | `ffmpeg-x86_64-pc-windows-msvc.exe` |
+| macOS Apple Silicon | `yt-dlp-aarch64-apple-darwin` | `ffmpeg-aarch64-apple-darwin` |
+| macOS Intel | `yt-dlp-x86_64-apple-darwin` | `ffmpeg-x86_64-apple-darwin` |
+| Linux x64 | `yt-dlp-x86_64-unknown-linux-gnu` | `ffmpeg-x86_64-unknown-linux-gnu` |
 
 To find your exact triple:
 
@@ -355,4 +361,4 @@ Install the system WebKit dependencies listed in the Linux setup section for you
 Run `chmod +x src-tauri/binaries/yt-dlp-*` to make the binary executable.
 
 **Downloads fail with ffmpeg error**
-yt-dlp needs ffmpeg to merge separate video+audio streams (required for 1080p+ quality). Make sure ffmpeg is installed and on PATH, or install it to the same directory as yt-dlp.
+ffmpeg is bundled as a sidecar — make sure `src-tauri/binaries/ffmpeg-{triple}` exists and is executable (`chmod +x`). Re-run the sidecar download step in the macOS setup section.

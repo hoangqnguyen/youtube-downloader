@@ -1,5 +1,5 @@
 use crate::ytdlp::progress::{parse_line, ParsedLine};
-use dashmap::DashMap;
+use dashmap::{DashMap, DashSet};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
@@ -34,6 +34,9 @@ pub enum JobEventPayload {
     FilePath {
         path: String,
     },
+    Title {
+        title: String,
+    },
     Done {
         success: bool,
         error: Option<String>,
@@ -44,6 +47,7 @@ pub async fn run_download(
     app: AppHandle,
     req: DownloadRequest,
     children: Arc<DashMap<String, CommandChild>>,
+    cancelled: Arc<DashSet<String>>,
 ) -> Result<(), String> {
     let args = build_args(&req);
 
@@ -89,6 +93,15 @@ pub async fn run_download(
                                 JobEvent {
                                     job_id: req.job_id.clone(),
                                     payload: JobEventPayload::Merging,
+                                },
+                            );
+                        }
+                        ParsedLine::Title(title) => {
+                            let _ = app.emit(
+                                "job-event",
+                                JobEvent {
+                                    job_id: req.job_id.clone(),
+                                    payload: JobEventPayload::Title { title },
                                 },
                             );
                         }
@@ -157,6 +170,10 @@ pub async fn run_download(
             }
             CommandEvent::Terminated(status) => {
                 children.remove(&req.job_id);
+                // Don't emit Done for cancelled jobs
+                if cancelled.remove(&req.job_id).is_some() {
+                    break;
+                }
                 let success = status.code == Some(0);
                 let error = if success {
                     None
@@ -177,6 +194,28 @@ pub async fn run_download(
     }
 
     Ok(())
+}
+
+fn find_ffmpeg() -> Option<String> {
+    // Prefer the bundled sidecar (placed alongside the executable by Tauri)
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            let bundled = dir.join("ffmpeg");
+            if bundled.exists() {
+                return Some(bundled.to_string_lossy().into_owned());
+            }
+        }
+    }
+    // Fall back to system installations
+    let candidates = [
+        "/opt/homebrew/bin/ffmpeg", // Homebrew Apple Silicon
+        "/usr/local/bin/ffmpeg",    // Homebrew Intel
+        "/usr/bin/ffmpeg",          // Linux / system
+    ];
+    candidates
+        .iter()
+        .find(|&&p| std::path::Path::new(p).exists())
+        .map(|&s| s.to_string())
 }
 
 fn build_args(req: &DownloadRequest) -> Vec<String> {
@@ -226,11 +265,22 @@ fn build_args(req: &DownloadRequest) -> Vec<String> {
         "--add-metadata".into(),
     ]);
 
+    // Print video title before download starts
+    args.extend([
+        "--print".into(),
+        "before_dl:YTDL_TITLE:%(title)s".into(),
+    ]);
+
     // Print final file path after all post-processing (merge, conversion, etc.)
     args.extend([
         "--print".into(),
         "after_move:YTDL_FINAL:%(filepath)s".into(),
     ]);
+
+    // Pass explicit ffmpeg path so it's found when running inside the app bundle
+    if let Some(ffmpeg) = find_ffmpeg() {
+        args.extend(["--ffmpeg-location".into(), ffmpeg]);
+    }
 
     args.push(req.url.clone());
     args

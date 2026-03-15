@@ -157,7 +157,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    padding-right: 28px;
+    padding-right: 60px;
   }
 
   .title-row {

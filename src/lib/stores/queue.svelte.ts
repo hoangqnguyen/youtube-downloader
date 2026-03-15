@@ -117,6 +117,10 @@ export function handleJobEvent(event: JobEvent) {
   const { job_id, kind } = event;
   const data = event.data as Record<string, unknown> | undefined;
 
+  // Ignore late-arriving events for cancelled jobs
+  const existing = jobs.find((j) => j.id === job_id);
+  if (!existing || existing.status === "cancelled") return;
+
   switch (kind) {
     case "Progress": {
       const p = data as {
@@ -132,6 +136,11 @@ export function handleJobEvent(event: JobEvent) {
         speed: p.speed,
         eta: p.eta,
       });
+      break;
+    }
+    case "Title": {
+      const t = data as { title: string };
+      updateJob(job_id, { title: t.title });
       break;
     }
     case "Merging": {

@@ -4,6 +4,7 @@ mod ytdlp;
 use commands::{download, playlist, settings};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
+use dashmap::DashSet;
 use dashmap::DashMap;
 use tokio::task::AbortHandle;
 use tauri_plugin_shell::process::CommandChild;
@@ -12,6 +13,7 @@ pub struct AppState {
     pub semaphore: Arc<Semaphore>,
     pub abort_handles: DashMap<String, AbortHandle>,
     pub children: Arc<DashMap<String, CommandChild>>,
+    pub cancelled: Arc<DashSet<String>>,
 }
 
 impl AppState {
@@ -20,6 +22,7 @@ impl AppState {
             semaphore: Arc::new(Semaphore::new(max_concurrent)),
             abort_handles: DashMap::new(),
             children: Arc::new(DashMap::new()),
+            cancelled: Arc::new(DashSet::new()),
         }
     }
 }

@@ -16,6 +16,7 @@ pub async fn start_download(
     let semaphore = Arc::clone(&state.semaphore);
     let abort_handles = state.abort_handles.clone();
     let children = Arc::clone(&state.children);
+    let cancelled = Arc::clone(&state.cancelled);
 
     let req = DownloadRequest {
         job_id: job_id.clone(),
@@ -29,7 +30,7 @@ pub async fn start_download(
 
     let handle = tokio::spawn(async move {
         let _permit = semaphore.acquire_owned().await.ok();
-        run_download(app_clone, req, children).await.ok();
+        run_download(app_clone, req, children, cancelled).await.ok();
     });
 
     abort_handles.insert(job_id, handle.abort_handle());
@@ -41,6 +42,8 @@ pub async fn cancel_download(
     state: State<'_, AppState>,
     job_id: String,
 ) -> Result<(), String> {
+    // Mark as cancelled so the event loop won't emit Done
+    state.cancelled.insert(job_id.clone());
     // Kill the yt-dlp child process
     if let Some((_, child)) = state.children.remove(&job_id) {
         let _ = child.kill();

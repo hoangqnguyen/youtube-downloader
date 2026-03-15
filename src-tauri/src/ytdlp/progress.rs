@@ -25,6 +25,7 @@ pub struct ProgressEvent {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ParsedLine {
     Progress(ProgressEvent),
+    Title(String),
     FinalPath(String),
     Merging,
     AlreadyDownloaded,
@@ -48,6 +49,10 @@ pub fn parse_line(line: &str) -> ParsedLine {
                 eta: parts[3].trim().to_string(),
             });
         }
+    }
+
+    if let Some(rest) = line.strip_prefix("YTDL_TITLE:") {
+        return ParsedLine::Title(rest.trim().to_string());
     }
 
     if let Some(caps) = FINAL_PATH_RE.captures(line) {
