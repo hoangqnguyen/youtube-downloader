@@ -25,12 +25,15 @@ export interface DownloadJob {
 
 export type CookiesBrowser = "" | "chrome" | "firefox" | "safari" | "edge" | "brave" | "opera";
 
+export type Theme = "dark" | "light";
+
 export interface AppSettings {
   outputDir: string;
   audioOnly: boolean;
   resolution: Resolution;
   maxConcurrent: number;
   cookiesBrowser: CookiesBrowser;
+  theme: Theme;
 }
 
 export interface ProgressEventData {

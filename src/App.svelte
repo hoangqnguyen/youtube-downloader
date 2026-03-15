@@ -1,13 +1,21 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { initQueue } from "./lib/stores/queue.svelte";
+  import { getTheme, toggleTheme } from "./lib/stores/settings.svelte";
   import UrlInput from "./lib/components/UrlInput.svelte";
   import QueuePanel from "./lib/components/QueuePanel.svelte";
   import AdvancedPanel from "./lib/components/AdvancedPanel.svelte";
   import FolderPicker from "./lib/components/FolderPicker.svelte";
   import logo from "./assets/logo.png";
 
+  let theme = $derived(getTheme());
+
+  $effect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  });
+
   onMount(async () => {
+    document.documentElement.setAttribute("data-theme", getTheme());
     await initQueue();
   });
 </script>
@@ -18,6 +26,18 @@
       <img src={logo} alt="Logo" width="24" height="24" />
       <span class="app-name">Lumi Downloader</span>
     </div>
+    <button class="theme-toggle btn-ghost" onclick={toggleTheme} title="Toggle theme" aria-label="Toggle dark/light mode">
+      {#if theme === "dark"}
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      {:else}
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+        </svg>
+      {/if}
+    </button>
   </header>
 
   <main class="content">
@@ -46,6 +66,7 @@
     height: 48px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 0 16px;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
@@ -58,6 +79,17 @@
     align-items: center;
     gap: 10px;
     -webkit-app-region: no-drag;
+  }
+
+  .theme-toggle {
+    -webkit-app-region: no-drag;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: var(--text-dim);
   }
 
   .app-name {

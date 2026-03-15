@@ -26,7 +26,23 @@
 
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+}
 
+[data-theme="light"] {
+  --bg: #f4f4f5;
+  --bg-card: #ffffff;
+  --bg-input: #fafafa;
+  --bg-hover: #e4e4e7;
+
+  --border: #d4d4d8;
+  --border-focus: #a1a1aa;
+
+  --text: #18181b;
+  --text-dim: #71717a;
+  --text-muted: #a1a1aa;
+}
+
+:root {
   font-size: 14px;
   line-height: 1.5;
   color: var(--text);
