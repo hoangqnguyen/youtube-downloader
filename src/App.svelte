@@ -5,6 +5,7 @@
   import QueuePanel from "./lib/components/QueuePanel.svelte";
   import AdvancedPanel from "./lib/components/AdvancedPanel.svelte";
   import FolderPicker from "./lib/components/FolderPicker.svelte";
+  import logo from "./assets/logo.png";
 
   onMount(async () => {
     await initQueue();
@@ -14,9 +15,7 @@
 <div class="app">
   <header class="titlebar">
     <div class="logo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--orange)">
-        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.77 1.52V6.76a4.85 4.85 0 0 1-1-.07z"/>
-      </svg>
+      <img src={logo} alt="Logo" width="24" height="24" />
       <span class="app-name">YT Downloader</span>
     </div>
   </header>
