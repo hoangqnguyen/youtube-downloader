@@ -23,9 +23,6 @@ jobs:
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             arch_label: x86_64
-          - platform: windows-2022
-            target: x86_64-pc-windows-msvc
-            arch_label: x86_64
 
     runs-on: ${{ matrix.platform }}
 
@@ -55,25 +52,6 @@ jobs:
             libsoup-3.0-dev \
             libjavascriptcoregtk-4.1-dev
 
-      - name: Fix MSVC discovery (Windows)
-        if: matrix.platform == 'windows-2022'
-        shell: pwsh
-        run: |
-          # Rust's cc crate prefers BuildTools over Enterprise, but the
-          # runner's BuildTools is a stub without C++ tools. Rename it
-          # so Rust falls back to Enterprise which has everything.
-          $btPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\BuildTools"
-          if (Test-Path $btPath) {
-            Rename-Item $btPath "${btPath}_disabled"
-            Write-Host "Disabled BuildTools stub, Rust will use Enterprise"
-          }
-          # Verify Enterprise has link.exe
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $vsPath = & $vswhere -latest -property installationPath
-          Write-Host "VS installation: $vsPath"
-          $linkExe = Get-ChildItem "$vsPath\VC\Tools\MSVC\*\bin\Hostx64\x64\link.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-          Write-Host "link.exe: $($linkExe.FullName)"
-
       - name: Install npm dependencies
         run: npm ci
 
@@ -85,18 +63,14 @@ jobs:
 
           case "${{ matrix.target }}" in
             aarch64-apple-darwin)
-              # yt-dlp
               curl -L -o "$BINDIR/yt-dlp-aarch64-apple-darwin" \
                 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos"
               chmod +x "$BINDIR/yt-dlp-aarch64-apple-darwin"
 
-              # ffmpeg + ffprobe (macOS ARM)
-              curl -L -o ffmpeg.zip \
-                "https://evermeet.cx/ffmpeg/getrelease/zip"
+              curl -L -o ffmpeg.zip "https://evermeet.cx/ffmpeg/getrelease/zip"
               unzip -o ffmpeg.zip -d "$BINDIR"
               mv "$BINDIR/ffmpeg" "$BINDIR/ffmpeg-aarch64-apple-darwin"
-              curl -L -o ffprobe.zip \
-                "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"
+              curl -L -o ffprobe.zip "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"
               unzip -o ffprobe.zip -d "$BINDIR"
               mv "$BINDIR/ffprobe" "$BINDIR/ffprobe-aarch64-apple-darwin"
               rm -f ffmpeg.zip ffprobe.zip
@@ -104,18 +78,14 @@ jobs:
               ;;
 
             x86_64-apple-darwin)
-              # yt-dlp
               curl -L -o "$BINDIR/yt-dlp-x86_64-apple-darwin" \
                 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos"
               chmod +x "$BINDIR/yt-dlp-x86_64-apple-darwin"
 
-              # ffmpeg + ffprobe (macOS x86_64)
-              curl -L -o ffmpeg.zip \
-                "https://evermeet.cx/ffmpeg/getrelease/zip"
+              curl -L -o ffmpeg.zip "https://evermeet.cx/ffmpeg/getrelease/zip"
               unzip -o ffmpeg.zip -d "$BINDIR"
               mv "$BINDIR/ffmpeg" "$BINDIR/ffmpeg-x86_64-apple-darwin"
-              curl -L -o ffprobe.zip \
-                "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"
+              curl -L -o ffprobe.zip "https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip"
               unzip -o ffprobe.zip -d "$BINDIR"
               mv "$BINDIR/ffprobe" "$BINDIR/ffprobe-x86_64-apple-darwin"
               rm -f ffmpeg.zip ffprobe.zip
@@ -123,12 +93,10 @@ jobs:
               ;;
 
             x86_64-unknown-linux-gnu)
-              # yt-dlp
               curl -L -o "$BINDIR/yt-dlp-x86_64-unknown-linux-gnu" \
                 "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux"
               chmod +x "$BINDIR/yt-dlp-x86_64-unknown-linux-gnu"
 
-              # ffmpeg + ffprobe (Linux static builds)
               curl -L -o ffmpeg.tar.xz \
                 "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
               tar -xf ffmpeg.tar.xz
@@ -137,21 +105,6 @@ jobs:
               cp "$FFDIR/ffprobe" "$BINDIR/ffprobe-x86_64-unknown-linux-gnu"
               rm -rf ffmpeg.tar.xz "$FFDIR"
               chmod +x "$BINDIR/ffmpeg-x86_64-unknown-linux-gnu" "$BINDIR/ffprobe-x86_64-unknown-linux-gnu"
-              ;;
-
-            x86_64-pc-windows-msvc)
-              # yt-dlp
-              curl -L -o "$BINDIR/yt-dlp-x86_64-pc-windows-msvc.exe" \
-                "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
-
-              # ffmpeg + ffprobe (Windows)
-              curl -L -o ffmpeg.zip \
-                "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
-              unzip -o ffmpeg.zip -d ffmpeg-win
-              FFDIR=$(ls -d ffmpeg-win/ffmpeg-*)
-              cp "$FFDIR/bin/ffmpeg.exe" "$BINDIR/ffmpeg-x86_64-pc-windows-msvc.exe"
-              cp "$FFDIR/bin/ffprobe.exe" "$BINDIR/ffprobe-x86_64-pc-windows-msvc.exe"
-              rm -rf ffmpeg.zip ffmpeg-win
               ;;
           esac
 
@@ -174,3 +127,73 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: --target ${{ matrix.target }}
+
+  build-windows:
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Download external binaries
+        shell: bash
+        run: |
+          BINDIR="src-tauri/binaries"
+          mkdir -p "$BINDIR"
+
+          curl -L -o "$BINDIR/yt-dlp-x86_64-pc-windows-msvc.exe" \
+            "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+
+          curl -L -o ffmpeg.zip \
+            "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+          unzip -o ffmpeg.zip -d ffmpeg-win
+          FFDIR=$(ls -d ffmpeg-win/ffmpeg-*)
+          cp "$FFDIR/bin/ffmpeg.exe" "$BINDIR/ffmpeg-x86_64-pc-windows-msvc.exe"
+          cp "$FFDIR/bin/ffprobe.exe" "$BINDIR/ffprobe-x86_64-pc-windows-msvc.exe"
+          rm -rf ffmpeg.zip ffmpeg-win
+
+          echo "Binaries in $BINDIR:"
+          ls -la "$BINDIR"
+
+      - name: Build Tauri app
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          npm run tauri build -- --target x86_64-pc-windows-msvc
+
+      - name: Upload Windows artifacts to release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+
+          # Create draft release if it doesn't exist yet
+          gh release view "$TAG" --repo "${{ github.repository }}" > /dev/null 2>&1 || \
+            gh release create "$TAG" \
+              --repo "${{ github.repository }}" \
+              --title "Lumi Downloader $TAG" \
+              --notes "Download the installer for your platform below.
+
+          **macOS:** \`.dmg\` file
+          **Windows:** \`.msi\` installer
+          **Linux:** \`.AppImage\` or \`.deb\` package" \
+              --draft
+
+          # Upload .msi and .exe installers
+          find src-tauri/target/x86_64-pc-windows-msvc/release/bundle -type f \( -name "*.msi" -o -name "*.exe" \) | while read f; do
+            echo "Uploading: $f"
+            gh release upload "$TAG" "$f" --repo "${{ github.repository }}" --clobber
+          done
