@@ -14,6 +14,7 @@ pub struct DownloadRequest {
     pub output_dir: String,
     pub audio_only: bool,
     pub resolution: String,
+    pub transcript: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -51,7 +52,12 @@ pub async fn run_download(
     children: Arc<DashMap<String, Child>>,
     cancelled: Arc<DashSet<String>>,
 ) -> Result<(), String> {
-    let args = build_args(&req);
+    let sub_lang = if req.transcript == "include" || req.transcript == "only" {
+        detect_video_language(&req.url).await
+    } else {
+        None
+    };
+    let args = build_args(&req, sub_lang.as_deref());
     let ytdlp_path = binaries::bin_path("yt-dlp");
 
     let mut child = Command::new(&ytdlp_path)
@@ -270,7 +276,32 @@ fn find_node_from_version_managers() -> Option<String> {
     None
 }
 
-fn build_args(req: &DownloadRequest) -> Vec<String> {
+/// Queries yt-dlp for the video's original language code (e.g. "en", "ja").
+/// Returns None if detection fails — caller should fall back to "en".
+async fn detect_video_language(url: &str) -> Option<String> {
+    let ytdlp_path = binaries::bin_path("yt-dlp");
+    let output = Command::new(&ytdlp_path)
+        .args([
+            "--no-playlist",
+            "--no-download",
+            "--print",
+            "%(language)s",
+            url,
+        ])
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .output()
+        .await
+        .ok()?;
+    let lang = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if lang.is_empty() || lang == "NA" {
+        None
+    } else {
+        Some(lang)
+    }
+}
+
+fn build_args(req: &DownloadRequest, sub_lang: Option<&str>) -> Vec<String> {
     let mut args: Vec<String> = vec![
         "--newline".into(),
         "--no-colors".into(),
@@ -292,7 +323,11 @@ fn build_args(req: &DownloadRequest) -> Vec<String> {
         format!("{}/%(title)s.%(ext)s", req.output_dir),
     ];
 
-    if req.audio_only {
+    let transcript_only = req.transcript == "only";
+
+    if transcript_only {
+        args.push("--skip-download".into());
+    } else if req.audio_only {
         args.extend([
             "--extract-audio".into(),
             "--audio-format".into(),
@@ -311,10 +346,25 @@ fn build_args(req: &DownloadRequest) -> Vec<String> {
         args.extend(["--format".into(), format, "--merge-output-format".into(), "mp4".into()]);
     }
 
-    args.extend([
-        "--embed-thumbnail".into(),
-        "--add-metadata".into(),
-    ]);
+    if !transcript_only {
+        args.extend([
+            "--embed-thumbnail".into(),
+            "--add-metadata".into(),
+        ]);
+    }
+
+    // Transcript / subtitle extraction
+    if req.transcript == "include" || req.transcript == "only" {
+        let lang = sub_lang.unwrap_or("en");
+        args.extend([
+            "--write-subs".into(),
+            "--write-auto-subs".into(),
+            "--sub-langs".into(),
+            format!("{lang}.*,{lang}"),
+            "--sub-format".into(),
+            "srt/vtt/best".into(),
+        ]);
+    }
 
     args.extend([
         "--print".into(),

@@ -25,7 +25,7 @@
     try {
       const parsed = parseInput(trimmed);
       if (parsed.length === 0) {
-        error = "No valid YouTube URLs found. Paste a video or playlist link.";
+        error = "No valid URLs found. Paste a YouTube or TikTok link.";
         return;
       }
 
@@ -62,6 +62,10 @@
     // Best effort — real title will come from yt-dlp during download
     try {
       const u = new URL(url);
+      if (u.hostname.includes("tiktok.com") || u.hostname === "vm.tiktok.com") {
+        const videoId = u.pathname.match(/\/video\/(\d+)/)?.[1];
+        return videoId ? `TikTok (${videoId})` : "TikTok video";
+      }
       const v = u.searchParams.get("v");
       return v ? `Video (${v})` : url;
     } catch {
@@ -88,7 +92,7 @@
       bind:this={textarea}
       bind:value
       onkeydown={onKeydown}
-placeholder="https://youtube.com/watch?v=... or playlist URL"
+placeholder="https://youtube.com/watch?v=... or TikTok link"
       rows={3}
       disabled={loading}
     ></textarea>

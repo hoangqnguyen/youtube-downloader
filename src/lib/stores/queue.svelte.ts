@@ -124,6 +124,7 @@ export function scheduleNext() {
       outputDir: s.outputDir,
       audioOnly: s.audioOnly,
       resolution: s.resolution,
+      transcript: s.transcript,
     }).catch((err) => {
       updateJob(job.id, { status: "error", error: String(err) });
       scheduleNext();

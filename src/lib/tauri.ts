@@ -31,6 +31,7 @@ export async function startDownload(params: {
   outputDir: string;
   audioOnly: boolean;
   resolution: string;
+  transcript: string;
 }): Promise<void> {
   return invoke<void>("start_download", {
     jobId: params.jobId,
@@ -38,6 +39,7 @@ export async function startDownload(params: {
     outputDir: params.outputDir,
     audioOnly: params.audioOnly,
     resolution: params.resolution,
+    transcript: params.transcript,
   });
 }
 

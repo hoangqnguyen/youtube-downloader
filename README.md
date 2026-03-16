@@ -4,7 +4,7 @@
 
 # Lumi Downloader
 
-**A fast, minimal desktop app for downloading videos and playlists.**
+**A fast, minimal desktop app for downloading YouTube and TikTok videos.**
 Built with [Tauri v2](https://tauri.app/) (Rust) + [Svelte 5](https://svelte.dev/).
 
 [![Release](https://img.shields.io/github/v/release/hoangqnguyen/lumi-downloader?style=flat-square)](https://github.com/hoangqnguyen/lumi-downloader/releases)
@@ -25,18 +25,18 @@ Built with [Tauri v2](https://tauri.app/) (Rust) + [Svelte 5](https://svelte.dev
 
 ## Features
 
-- Paste a list of URLs (newline, comma, or space-separated) or a playlist URL
-- Playlist URLs are automatically expanded into individual videos
-- Parallel downloads with configurable concurrency (1–5 at a time)
-- Real-time progress per video: speed, ETA, file size
-- Retry all failed downloads with one click
-- Auto-retry with configurable max attempts and delay
-- Audio-only mode: extract MP3 from any video
-- Resolution selector: Best / 1080p / 720p / 480p / 360p
-- Customizable save folder (defaults to system Downloads)
-- Light/dark theme toggle
-- Auto-downloads yt-dlp, ffmpeg, and ffprobe on first launch — no manual setup needed
-- Small binary (~5 MB), no telemetry, no ads
+- **YouTube & TikTok** — download videos from YouTube and TikTok (watermark-free)
+- **Batch & playlists** — paste multiple URLs or a playlist link, all expanded and queued automatically
+- **Parallel downloads** — configurable concurrency (1–5 simultaneous downloads)
+- **Transcript extraction** — download subtitles/transcripts in the video's original language (include alongside media or download only the transcript)
+- **Audio-only mode** — extract MP3 from any video
+- **Resolution selector** — Best / 1080p / 720p / 480p / 360p
+- **Auto-retry** — automatically retry failed downloads with configurable max attempts and delay
+- **Real-time progress** — live speed, ETA, and file size per download
+- **Customizable save folder** — defaults to system Downloads
+- **Light/dark theme**
+- **Zero setup** — required libraries are auto-downloaded on first launch
+- **Small & private** — ~5 MB binary, no telemetry, no ads, no account needed
 
 ---
 
@@ -73,14 +73,14 @@ cd lumi-downloader
 # 2. Install JS dependencies
 npm install
 
-# 3. Dev mode (yt-dlp + ffmpeg are auto-downloaded on first launch)
+# 3. Dev mode (required libraries are auto-downloaded on first launch)
 npm run tauri -- dev
 
 # 4. Release build
 npm run tauri -- build
 ```
 
-> **Note:** You don't need to download yt-dlp, ffmpeg, or ffprobe manually. The app automatically downloads them on first launch.
+> **Note:** You don't need to download any external libraries manually. The app automatically downloads them on first launch.
 
 ### Linux — system dependencies
 
@@ -171,7 +171,7 @@ lumi-downloader/
 
 **Gatekeeper warning on macOS** — Either notarize the build (see above), or right-click → Open on first launch.
 
-**Downloads fail** — The app auto-downloads yt-dlp and ffmpeg on first launch. If that fails (e.g. network issues), restart the app to retry.
+**Downloads fail** — The app auto-downloads required libraries on first launch. If that fails (e.g. network issues), restart the app to retry.
 
 ---
 

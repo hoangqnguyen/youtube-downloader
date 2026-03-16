@@ -82,12 +82,12 @@ pub async fn download_binaries(
     std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create bin dir: {e}"))?;
 
     // Download yt-dlp
-    on_progress("Downloading yt-dlp...");
+    on_progress("Downloading external libraries (1/2)...");
     download_ytdlp(&dir).await?;
 
     // Download ffmpeg + ffprobe (skip if system ffmpeg exists)
     if find_system_ffmpeg().is_none() {
-        on_progress("Downloading ffmpeg...");
+        on_progress("Downloading external libraries (2/2)...");
         download_ffmpeg(&dir).await?;
     }
 

@@ -1,4 +1,4 @@
-import type { AppSettings, Resolution, Theme } from "../types";
+import type { AppSettings, Resolution, Theme, TranscriptMode } from "../types";
 import { getDefaultDownloadDir } from "../tauri";
 
 const STORAGE_KEY = "ytdl-settings";
@@ -23,6 +23,7 @@ const saved = loadFromStorage();
 let outputDir = $state<string>(saved.outputDir ?? "");
 let audioOnly = $state<boolean>(saved.audioOnly ?? false);
 let resolution = $state<Resolution>(saved.resolution ?? "best");
+let transcript = $state<TranscriptMode>(saved.transcript ?? "none");
 let maxConcurrent = $state<number>(saved.maxConcurrent ?? 3);
 let theme = $state<Theme>(saved.theme ?? "dark");
 let autoRetry = $state<boolean>(saved.autoRetry ?? false);
@@ -37,7 +38,7 @@ if (!saved.outputDir) {
 }
 
 function persist() {
-  saveToStorage({ outputDir, audioOnly, resolution, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec });
+  saveToStorage({ outputDir, audioOnly, resolution, transcript, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec });
 }
 
 export function getOutputDir(): string {
@@ -50,6 +51,10 @@ export function getAudioOnly(): boolean {
 
 export function getResolution(): Resolution {
   return resolution;
+}
+
+export function getTranscript(): TranscriptMode {
+  return transcript;
 }
 
 export function getMaxConcurrent(): number {
@@ -68,6 +73,11 @@ export function setAudioOnly(v: boolean) {
 
 export function setResolution(v: Resolution) {
   resolution = v;
+  persist();
+}
+
+export function setTranscript(v: TranscriptMode) {
+  transcript = v;
   persist();
 }
 
@@ -118,5 +128,5 @@ export function toggleTheme() {
 }
 
 export function getSettings(): AppSettings {
-  return { outputDir, audioOnly, resolution, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec };
+  return { outputDir, audioOnly, resolution, transcript, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec };
 }

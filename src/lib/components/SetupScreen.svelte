@@ -48,7 +48,7 @@
       </div>
     {:else}
       <button class="btn btn-primary" onclick={startSetup}>Set up</button>
-      <p class="hint">Downloads yt-dlp (~40 MB) and ffmpeg (~80 MB)</p>
+      <p class="hint">Downloads required external libraries (~120 MB)</p>
     {/if}
   </div>
 </div>

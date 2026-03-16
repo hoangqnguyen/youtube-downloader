@@ -2,12 +2,14 @@
   import {
     getAudioOnly,
     getResolution,
+    getTranscript,
     getMaxConcurrent,
     getAutoRetry,
     getAutoRetryMaxAttempts,
     getAutoRetryDelaySec,
     setAudioOnly,
     setResolution,
+    setTranscript,
     setMaxConcurrent,
     setAutoRetry,
     setAutoRetryMaxAttempts,
@@ -16,11 +18,18 @@
 
   let audioOnly = $derived(getAudioOnly());
   let resolution = $derived(getResolution());
+  let transcriptMode = $derived(getTranscript());
   let maxConcurrent = $derived(getMaxConcurrent());
   let autoRetry = $derived(getAutoRetry());
   let autoRetryMaxAttempts = $derived(getAutoRetryMaxAttempts());
   let autoRetryDelaySec = $derived(getAutoRetryDelaySec());
-  import type { Resolution } from "../types";
+  import type { Resolution, TranscriptMode } from "../types";
+
+  const transcriptModes: { value: TranscriptMode; label: string }[] = [
+    { value: "none", label: "None" },
+    { value: "include", label: "Include" },
+    { value: "only", label: "Only" },
+  ];
 
   const resolutions: { value: Resolution; label: string }[] = [
     { value: "best", label: "Best" },
@@ -81,6 +90,35 @@
             </label>
           {/each}
         </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <span class="field-label">Transcript</span>
+        <div class="radio-group">
+          {#each transcriptModes as t}
+            <label class="radio-option" class:selected={transcriptMode === t.value}>
+              <input
+                type="radio"
+                name="transcript"
+                value={t.value}
+                checked={transcriptMode === t.value}
+                onchange={() => setTranscript(t.value)}
+              />
+              <span class="radio-label">{t.label}</span>
+            </label>
+          {/each}
+        </div>
+        <span class="field-hint">
+          {#if transcriptMode === "none"}
+            No transcript downloaded
+          {:else if transcriptMode === "include"}
+            Downloads transcript alongside media
+          {:else}
+            Downloads only the transcript, no media
+          {/if}
+        </span>
       </div>
     </div>
 
@@ -296,6 +334,11 @@
     font-size: 12px;
     font-weight: 500;
     color: var(--text-dim);
+  }
+
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-muted);
   }
 
   .radio-group {

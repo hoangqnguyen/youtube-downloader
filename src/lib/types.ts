@@ -8,6 +8,7 @@ export type JobStatus =
   | "cancelled";
 
 export type Resolution = "best" | "1080" | "720" | "480" | "360";
+export type TranscriptMode = "none" | "include" | "only";
 
 export interface DownloadJob {
   id: string;
@@ -30,6 +31,7 @@ export interface AppSettings {
   outputDir: string;
   audioOnly: boolean;
   resolution: Resolution;
+  transcript: TranscriptMode;
   maxConcurrent: number;
   theme: Theme;
   autoRetry: boolean;

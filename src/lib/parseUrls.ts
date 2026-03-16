@@ -7,6 +7,40 @@ const YT_PLAYLIST_RE =
 const YT_WATCH_WITH_LIST_RE =
   /youtube\.com\/watch\?(?:.*&)?v=([A-Za-z0-9_-]{11})(?:.*&)?list=([A-Za-z0-9_-]+)/;
 
+// Matches all yt-dlp supported TikTok URL patterns:
+// - Video:      tiktok.com/@user/video/1234
+// - Short:      vm.tiktok.com/xxx, vt.tiktok.com/xxx, tiktok.com/t/xxx
+// - User:       tiktok.com/@user
+// - Sound:      tiktok.com/music/name-1234
+// - Effect:     tiktok.com/sticker/name-1234
+// - Tag:        tiktok.com/tag/name
+// - Collection: tiktok.com/@user/collection/name-1234
+// - Live:       tiktok.com/@user/live
+// - Douyin:     douyin.com/video/1234
+const TIKTOK_VIDEO_RE =
+  /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/\d+/;
+
+const TIKTOK_SHORT_RE =
+  /(?:https?:\/\/)?(?:(?:vm|vt)\.tiktok\.com|(?:www\.)?tiktok\.com\/t)\/\w+/;
+
+const TIKTOK_USER_RE =
+  /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/?(?:[#?]|$)/;
+
+const TIKTOK_COLLECTION_RE =
+  /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/collection\/[^/?#]+-\d+/;
+
+const TIKTOK_SOUND_RE =
+  /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/music\/[\w.-]+-\d+/;
+
+const TIKTOK_TAG_RE =
+  /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/tag\/[^/?#&]+/;
+
+const TIKTOK_LIVE_RE =
+  /(?:https?:\/\/)?(?:www\.)?tiktok\.com\/@[\w.-]+\/live/;
+
+const DOUYIN_RE =
+  /(?:https?:\/\/)?(?:www\.)?douyin\.com\/video\/\d+/;
+
 export type ParsedUrl =
   | { type: "video"; url: string }
   | { type: "playlist"; url: string }
@@ -46,8 +80,25 @@ export function parseInput(raw: string): ParsedUrl[] {
       continue;
     }
 
-    // Only accept YouTube URLs
-    // Non-YouTube URLs are silently ignored
+    if (TIKTOK_VIDEO_RE.test(url) || TIKTOK_SHORT_RE.test(url) || DOUYIN_RE.test(url)) {
+      result.push({ type: "video", url });
+      continue;
+    }
+
+    if (TIKTOK_COLLECTION_RE.test(url) || TIKTOK_SOUND_RE.test(url) || TIKTOK_TAG_RE.test(url)) {
+      result.push({ type: "playlist", url });
+      continue;
+    }
+
+    if (TIKTOK_LIVE_RE.test(url)) {
+      result.push({ type: "video", url });
+      continue;
+    }
+
+    if (TIKTOK_USER_RE.test(url)) {
+      result.push({ type: "playlist", url });
+      continue;
+    }
   }
 
   return result;
