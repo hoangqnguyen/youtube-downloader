@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hoangqnguyen.github.io/lumi-downloader/sitemap.xml
