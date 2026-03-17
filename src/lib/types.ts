@@ -26,6 +26,7 @@ export interface DownloadJob {
 }
 
 export type Theme = "dark" | "light";
+export type CookieBrowser = "none" | "firefox";
 
 export interface AppSettings {
   outputDir: string;
@@ -37,6 +38,7 @@ export interface AppSettings {
   autoRetry: boolean;
   autoRetryMaxAttempts: number;
   autoRetryDelaySec: number;
+  cookieBrowser: CookieBrowser;
 }
 
 export interface ProgressEventData {

@@ -1,4 +1,4 @@
-import type { AppSettings, Resolution, Theme, TranscriptMode } from "../types";
+import type { AppSettings, Resolution, Theme, TranscriptMode, CookieBrowser } from "../types";
 import { getDefaultDownloadDir } from "../tauri";
 
 const STORAGE_KEY = "ytdl-settings";
@@ -29,6 +29,7 @@ let theme = $state<Theme>(saved.theme ?? "dark");
 let autoRetry = $state<boolean>(saved.autoRetry ?? false);
 let autoRetryMaxAttempts = $state<number>(saved.autoRetryMaxAttempts ?? 3);
 let autoRetryDelaySec = $state<number>(saved.autoRetryDelaySec ?? 10);
+let cookieBrowser = $state<CookieBrowser>(saved.cookieBrowser ?? "none");
 
 if (!saved.outputDir) {
   getDefaultDownloadDir().then((dir) => {
@@ -38,7 +39,7 @@ if (!saved.outputDir) {
 }
 
 function persist() {
-  saveToStorage({ outputDir, audioOnly, resolution, transcript, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec });
+  saveToStorage({ outputDir, audioOnly, resolution, transcript, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec, cookieBrowser });
 }
 
 export function getOutputDir(): string {
@@ -113,6 +114,15 @@ export function setAutoRetryDelaySec(v: number) {
   persist();
 }
 
+export function getCookieBrowser(): CookieBrowser {
+  return cookieBrowser;
+}
+
+export function setCookieBrowser(v: CookieBrowser) {
+  cookieBrowser = v;
+  persist();
+}
+
 export function getTheme(): Theme {
   return theme;
 }
@@ -128,5 +138,5 @@ export function toggleTheme() {
 }
 
 export function getSettings(): AppSettings {
-  return { outputDir, audioOnly, resolution, transcript, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec };
+  return { outputDir, audioOnly, resolution, transcript, maxConcurrent, theme, autoRetry, autoRetryMaxAttempts, autoRetryDelaySec, cookieBrowser };
 }

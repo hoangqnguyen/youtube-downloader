@@ -125,6 +125,7 @@ export function scheduleNext() {
       audioOnly: s.audioOnly,
       resolution: s.resolution,
       transcript: s.transcript,
+      cookieBrowser: s.cookieBrowser,
     }).catch((err) => {
       updateJob(job.id, { status: "error", error: String(err) });
       scheduleNext();

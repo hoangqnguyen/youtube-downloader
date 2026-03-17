@@ -18,6 +18,7 @@ pub struct DownloadRequest {
     pub audio_only: bool,
     pub resolution: String,
     pub transcript: String,
+    pub cookie_browser: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -56,7 +57,7 @@ pub async fn run_download(
     cancelled: Arc<DashSet<String>>,
 ) -> Result<(), String> {
     let sub_lang = if req.transcript == "include" || req.transcript == "only" {
-        detect_video_language(&req.url).await
+        detect_video_language(&req.url, &req.cookie_browser).await
     } else {
         None
     };
@@ -284,7 +285,7 @@ fn find_node_from_version_managers() -> Option<String> {
 
 /// Queries yt-dlp for the video's original language code (e.g. "en", "ja").
 /// Returns None if detection fails — caller should fall back to "en".
-async fn detect_video_language(url: &str) -> Option<String> {
+async fn detect_video_language(url: &str, cookie_browser: &str) -> Option<String> {
     let ytdlp_path = binaries::bin_path("yt-dlp");
     let mut cmd = Command::new(&ytdlp_path);
     cmd.args([
@@ -292,8 +293,11 @@ async fn detect_video_language(url: &str) -> Option<String> {
             "--no-download",
             "--print",
             "%(language)s",
-            url,
-        ])
+        ]);
+    if !cookie_browser.is_empty() && cookie_browser != "none" {
+        cmd.args(["--cookies-from-browser", cookie_browser]);
+    }
+    cmd.arg(url)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::null());
     #[cfg(target_os = "windows")]
@@ -391,6 +395,10 @@ fn build_args(req: &DownloadRequest, sub_lang: Option<&str>) -> Vec<String> {
 
     if let Some(node) = find_node() {
         args.extend(["--js-runtimes".into(), format!("node:{node}")]);
+    }
+
+    if !req.cookie_browser.is_empty() && req.cookie_browser != "none" {
+        args.extend(["--cookies-from-browser".into(), req.cookie_browser.clone()]);
     }
 
     args.push(req.url.clone());

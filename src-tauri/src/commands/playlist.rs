@@ -17,15 +17,19 @@ pub struct PlaylistEntry {
 #[tauri::command]
 pub async fn expand_playlist(
     url: String,
+    cookie_browser: String,
 ) -> Result<Vec<PlaylistEntry>, String> {
     let ytdlp_path = binaries::bin_path("yt-dlp");
 
-    let args = vec![
+    let mut args = vec![
         "--flat-playlist".to_string(),
         "--dump-json".to_string(),
         "--no-warnings".to_string(),
-        url,
     ];
+    if !cookie_browser.is_empty() && cookie_browser != "none" {
+        args.extend(["--cookies-from-browser".to_string(), cookie_browser]);
+    }
+    args.push(url);
 
     let mut cmd = Command::new(&ytdlp_path);
     cmd.args(&args);

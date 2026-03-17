@@ -7,6 +7,7 @@
     getAutoRetry,
     getAutoRetryMaxAttempts,
     getAutoRetryDelaySec,
+    getCookieBrowser,
     setAudioOnly,
     setResolution,
     setTranscript,
@@ -14,6 +15,7 @@
     setAutoRetry,
     setAutoRetryMaxAttempts,
     setAutoRetryDelaySec,
+    setCookieBrowser,
   } from "../stores/settings.svelte";
 
   let audioOnly = $derived(getAudioOnly());
@@ -23,7 +25,13 @@
   let autoRetry = $derived(getAutoRetry());
   let autoRetryMaxAttempts = $derived(getAutoRetryMaxAttempts());
   let autoRetryDelaySec = $derived(getAutoRetryDelaySec());
-  import type { Resolution, TranscriptMode } from "../types";
+  let cookieBrowser = $derived(getCookieBrowser());
+  import type { Resolution, TranscriptMode, CookieBrowser } from "../types";
+
+  const cookieBrowsers: { value: CookieBrowser; label: string }[] = [
+    { value: "none", label: "None" },
+    { value: "firefox", label: "Firefox" },
+  ];
 
   const transcriptModes: { value: TranscriptMode; label: string }[] = [
     { value: "none", label: "None" },
@@ -43,23 +51,20 @@
 
 <details class="advanced-panel">
   <summary class="summary">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="3"/>
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
     </svg>
     Advanced options
-    <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="6 9 12 15 18 9"/>
     </svg>
   </summary>
 
   <div class="content">
-    <div class="row">
-      <label class="toggle-label" for="audio-only">
-        <span class="label-text">
-          <span class="label-title">Audio only</span>
-          <span class="label-sub">Extracts MP3 from video</span>
-        </span>
+    <!-- Row 1: Audio only toggle + Resolution -->
+    <div class="inline-row">
+      <label class="mini-toggle" for="audio-only">
         <div class="toggle" class:on={audioOnly}>
           <input
             id="audio-only"
@@ -69,11 +74,10 @@
           />
           <div class="track"><div class="thumb"></div></div>
         </div>
+        <span class="mini-toggle-text">Audio only</span>
       </label>
-    </div>
 
-    <div class="row" class:disabled={audioOnly}>
-      <div class="field">
+      <div class="field flex-1" class:disabled={audioOnly}>
         <span class="field-label">Resolution</span>
         <div class="radio-group">
           {#each resolutions as r}
@@ -93,8 +97,9 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="field">
+    <!-- Row 2: Transcript + Browser cookies -->
+    <div class="inline-row">
+      <div class="field flex-1">
         <span class="field-label">Transcript</span>
         <div class="radio-group">
           {#each transcriptModes as t}
@@ -110,42 +115,47 @@
             </label>
           {/each}
         </div>
-        <span class="field-hint">
-          {#if transcriptMode === "none"}
-            No transcript downloaded
-          {:else if transcriptMode === "include"}
-            Downloads transcript alongside media
-          {:else}
-            Downloads only the transcript, no media
-          {/if}
-        </span>
+      </div>
+
+      <div class="field flex-1">
+        <span class="field-label">Browser cookies</span>
+        <div class="radio-group">
+          {#each cookieBrowsers as b}
+            <label class="radio-option" class:selected={cookieBrowser === b.value}>
+              <input
+                type="radio"
+                name="cookie-browser"
+                value={b.value}
+                checked={cookieBrowser === b.value}
+                onchange={() => setCookieBrowser(b.value)}
+              />
+              <span class="radio-label">{b.label}</span>
+            </label>
+          {/each}
+        </div>
       </div>
     </div>
 
-    <div class="row">
-      <div class="field">
+    <!-- Row 3: Parallel downloads slider -->
+    <div class="field">
+      <div class="slider-row">
         <span class="field-label">Parallel downloads</span>
-        <div class="slider-row">
-          <input
-            type="range"
-            min="1"
-            max="5"
-            value={maxConcurrent}
-            onchange={(e) => setMaxConcurrent(Number((e.target as HTMLInputElement).value))}
-          />
-          <span class="slider-val">{maxConcurrent}</span>
-        </div>
+        <input
+          type="range"
+          min="1"
+          max="5"
+          value={maxConcurrent}
+          onchange={(e) => setMaxConcurrent(Number((e.target as HTMLInputElement).value))}
+        />
+        <span class="slider-val">{maxConcurrent}</span>
       </div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="row">
-      <label class="toggle-label" for="auto-retry">
-        <span class="label-text">
-          <span class="label-title">Auto-retry failed</span>
-          <span class="label-sub">Automatically retry failed downloads</span>
-        </span>
+    <!-- Row 4: Auto-retry toggle + inline sliders -->
+    <div class="inline-row">
+      <label class="mini-toggle" for="auto-retry">
         <div class="toggle" class:on={autoRetry}>
           <input
             id="auto-retry"
@@ -155,14 +165,13 @@
           />
           <div class="track"><div class="thumb"></div></div>
         </div>
+        <span class="mini-toggle-text">Auto-retry</span>
       </label>
-    </div>
 
-    {#if autoRetry}
-      <div class="row sub-settings">
-        <div class="field">
-          <span class="field-label">Max retries</span>
+      {#if autoRetry}
+        <div class="field flex-1">
           <div class="slider-row">
+            <span class="field-label">Retries</span>
             <input
               type="range"
               min="1"
@@ -173,12 +182,10 @@
             <span class="slider-val">{autoRetryMaxAttempts}</span>
           </div>
         </div>
-      </div>
 
-      <div class="row sub-settings">
-        <div class="field">
-          <span class="field-label">Retry delay</span>
+        <div class="field flex-1">
           <div class="slider-row">
+            <span class="field-label">Delay</span>
             <input
               type="range"
               min="5"
@@ -190,9 +197,8 @@
             <span class="slider-val">{autoRetryDelaySec}s</span>
           </div>
         </div>
-      </div>
-    {/if}
-
+      {/if}
+    </div>
   </div>
 </details>
 
@@ -207,11 +213,11 @@
   .summary {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
+    gap: 6px;
+    padding: 8px 12px;
     cursor: pointer;
     user-select: none;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-dim);
     letter-spacing: 0.03em;
@@ -237,54 +243,49 @@
   }
 
   .content {
-    padding: 4px 14px 14px;
+    padding: 2px 12px 10px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     border-top: 1px solid var(--border);
   }
 
-  .row {
-    transition: opacity 0.2s;
+  .inline-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
   }
 
-  .row.disabled {
-    opacity: 0.4;
+  .flex-1 {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .disabled {
+    opacity: 0.35;
     pointer-events: none;
-  }
-
-  .sub-settings {
-    padding-left: 8px;
   }
 
   .divider {
     height: 1px;
     background: var(--border);
-    margin: 2px 0;
+    margin: 0;
   }
 
-  .toggle-label {
+  .mini-toggle {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 6px;
     cursor: pointer;
+    flex-shrink: 0;
+    padding-bottom: 1px;
   }
 
-  .label-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .label-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .label-sub {
+  .mini-toggle-text {
     font-size: 11px;
-    color: var(--text-muted);
+    font-weight: 500;
+    color: var(--text-dim);
+    white-space: nowrap;
   }
 
   .toggle input {
@@ -295,13 +296,14 @@
   }
 
   .track {
-    width: 40px;
-    height: 22px;
+    width: 32px;
+    height: 18px;
     background: var(--border);
     border-radius: 999px;
     position: relative;
     transition: background 0.2s;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   .toggle.on .track {
@@ -309,36 +311,32 @@
   }
 
   .thumb {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     background: #fff;
     border-radius: 50%;
     position: absolute;
-    top: 3px;
-    left: 3px;
+    top: 2px;
+    left: 2px;
     transition: transform 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
 
   .toggle.on .thumb {
-    transform: translateX(18px);
+    transform: translateX(14px);
   }
 
   .field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 3px;
   }
 
   .field-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     color: var(--text-dim);
-  }
-
-  .field-hint {
-    font-size: 11px;
-    color: var(--text-muted);
+    white-space: nowrap;
   }
 
   .radio-group {
@@ -373,8 +371,8 @@
     display: block;
     width: 100%;
     text-align: center;
-    padding: 6px 4px;
-    font-size: 12px;
+    padding: 4px 3px;
+    font-size: 11px;
     font-weight: 500;
     color: var(--text-dim);
     transition: all 0.15s;
@@ -394,12 +392,12 @@
   .slider-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 
   input[type="range"] {
     flex: 1;
-    height: 4px;
+    height: 3px;
     appearance: none;
     background: var(--border);
     border-radius: 999px;
@@ -410,18 +408,18 @@
 
   input[type="range"]::-webkit-slider-thumb {
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--orange);
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
 
   .slider-val {
-    min-width: 28px;
+    min-width: 24px;
     text-align: center;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--orange);
     font-family: var(--font-mono);
