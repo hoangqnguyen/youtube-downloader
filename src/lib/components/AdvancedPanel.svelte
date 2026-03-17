@@ -48,8 +48,8 @@
   ];
 
   const formats: { value: boolean; label: string }[] = [
-    { value: false, label: "MP4" },
-    { value: true, label: "MP3" },
+    { value: false, label: "Video" },
+    { value: true, label: "Audio Only" },
   ];
 
   let tipText = $state("");
@@ -61,7 +61,7 @@
     if (!text) return;
     const rect = el.getBoundingClientRect();
     tipText = text;
-    tipStyle = `top:${rect.bottom + 6}px;left:${rect.left}px`;
+    tipStyle = `top:${rect.top - 6}px;left:${rect.left}px;transform:translateY(-100%)`;
   }
 
   function hideTip() {
@@ -88,9 +88,9 @@
   <div class="content">
     <div class="grid">
 
-      <span class="label">Format <!-- svelte-ignore a11y_no_static_element_interactions --><span class="tip" data-tip="MP4 = video + audio. MP3 = audio only" onmouseenter={showTip} onmouseleave={hideTip}>?</span></span>
+      <span class="label">Format <!-- svelte-ignore a11y_no_static_element_interactions --><span class="tip" data-tip="Video saves as MP4. Audio Only extracts MP3" onmouseenter={showTip} onmouseleave={hideTip}>?</span></span>
       <div class="control">
-        <div class="radio-group compact-2">
+        <div class="radio-group compact">
           {#each formats as f}
             <label class="radio-option" class:selected={audioOnly === f.value}>
               <input type="radio" name="format" value={f.label} checked={audioOnly === f.value} onchange={() => setAudioOnly(f.value)} />
