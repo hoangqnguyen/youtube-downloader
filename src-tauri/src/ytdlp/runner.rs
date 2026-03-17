@@ -7,6 +7,9 @@ use tauri::{AppHandle, Emitter};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DownloadRequest {
     pub job_id: String,
@@ -60,10 +63,13 @@ pub async fn run_download(
     let args = build_args(&req, sub_lang.as_deref());
     let ytdlp_path = binaries::bin_path("yt-dlp");
 
-    let mut child = Command::new(&ytdlp_path)
-        .args(&args)
+    let mut cmd = Command::new(&ytdlp_path);
+    cmd.args(&args)
         .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+    let mut child = cmd
         .spawn()
         .map_err(|e| format!("Failed to spawn yt-dlp: {e}"))?;
 
@@ -280,8 +286,8 @@ fn find_node_from_version_managers() -> Option<String> {
 /// Returns None if detection fails — caller should fall back to "en".
 async fn detect_video_language(url: &str) -> Option<String> {
     let ytdlp_path = binaries::bin_path("yt-dlp");
-    let output = Command::new(&ytdlp_path)
-        .args([
+    let mut cmd = Command::new(&ytdlp_path);
+    cmd.args([
             "--no-playlist",
             "--no-download",
             "--print",
@@ -289,7 +295,10 @@ async fn detect_video_language(url: &str) -> Option<String> {
             url,
         ])
         .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+    let output = cmd
         .output()
         .await
         .ok()?;
@@ -320,7 +329,7 @@ fn build_args(req: &DownloadRequest, sub_lang: Option<&str>) -> Vec<String> {
         "^[\\s.]+|[\\s.]+$".into(),
         "".into(),
         "-o".into(),
-        format!("{}/%(title)s.%(ext)s", req.output_dir),
+        format!("{}/%(title)s [%(id)s].%(ext)s", req.output_dir),
     ];
 
     let transcript_only = req.transcript == "only";

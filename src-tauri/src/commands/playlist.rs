@@ -2,6 +2,9 @@ use crate::binaries;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlaylistEntry {
     pub url: String,
@@ -24,8 +27,11 @@ pub async fn expand_playlist(
         url,
     ];
 
-    let output = Command::new(&ytdlp_path)
-        .args(&args)
+    let mut cmd = Command::new(&ytdlp_path);
+    cmd.args(&args);
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+    let output = cmd
         .output()
         .await
         .map_err(|e| format!("Failed to run yt-dlp: {e}"))?;

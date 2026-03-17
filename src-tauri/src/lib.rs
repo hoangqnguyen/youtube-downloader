@@ -4,6 +4,7 @@ mod ytdlp;
 
 use commands::{download, playlist, settings, setup};
 use std::sync::Arc;
+use tauri::Manager;
 use tokio::sync::Semaphore;
 use dashmap::DashSet;
 use dashmap::DashMap;
@@ -50,6 +51,24 @@ pub fn run() {
             setup::check_binaries,
             setup::setup_binaries,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                let state = window.state::<AppState>();
+                // Abort all running tokio tasks
+                let abort_handles: &DashMap<String, AbortHandle> = &state.abort_handles;
+                for entry in abort_handles.iter() {
+                    entry.value().abort();
+                }
+                // Kill all child processes (yt-dlp / ffmpeg)
+                let children: Arc<DashMap<String, Child>> = Arc::clone(&state.children);
+                tauri::async_runtime::block_on(async move {
+                    for mut entry in children.iter_mut() {
+                        let child: &mut Child = entry.value_mut();
+                        let _ = child.kill().await;
+                    }
+                });
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
